@@ -10,3 +10,9 @@ export interface Prompt {
   tags: Tag[];
   createdAt: string;
 }
+
+export interface AIResponse {
+  text: string;
+  loading: boolean;
+  error: string | null;
+}

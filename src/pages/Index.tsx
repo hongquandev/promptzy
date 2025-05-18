@@ -6,6 +6,7 @@ import TagFilter from "@/components/TagFilter";
 import PromptCard from "@/components/PromptCard";
 import EmptyState from "@/components/EmptyState";
 import PromptForm from "@/components/PromptForm";
+import AIAssistant from "@/components/AIAssistant";
 import { Prompt, Tag } from "@/types";
 import { getPrompts, savePrompt, deletePrompt, getAllTags } from "@/lib/promptStore";
 import { useToast } from "@/hooks/use-toast";
@@ -79,6 +80,20 @@ const Index = () => {
         : [...prevTags, tagId]
     );
   };
+  
+  const handleUseAIPrompt = (text: string) => {
+    // Create a new prompt with the AI-generated text
+    setEditingPrompt(null);
+    // Open the form with the AI text already populated
+    setIsFormOpen(true);
+    // We'll pass the text to the form by creating a temporary prompt
+    setEditingPrompt({
+      id: "",
+      text: text,
+      tags: [],
+      createdAt: ""
+    });
+  };
 
   const filteredPrompts = prompts.filter(prompt => {
     // Filter by search term
@@ -130,6 +145,8 @@ const Index = () => {
         onSave={handleSavePrompt}
         editingPrompt={editingPrompt}
       />
+      
+      <AIAssistant onUsePrompt={handleUseAIPrompt} />
     </div>
   );
 };

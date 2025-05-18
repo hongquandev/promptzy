@@ -23,7 +23,12 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
   useEffect(() => {
     if (editingPrompt) {
       setText(editingPrompt.text);
-      setTags([...editingPrompt.tags]);
+      // Only copy tags if the prompt has an id (meaning it's not a new AI-generated prompt)
+      if (editingPrompt.id) {
+        setTags([...editingPrompt.tags]);
+      } else {
+        setTags([]);
+      }
     } else {
       setText("");
       setTags([]);
@@ -52,16 +57,16 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
     }
 
     const promptData: Prompt = {
-      id: editingPrompt?.id || Date.now().toString(),
+      id: editingPrompt?.id && editingPrompt.id !== "" ? editingPrompt.id : Date.now().toString(),
       text: text.trim(),
       tags,
-      createdAt: editingPrompt?.createdAt || new Date().toISOString(),
+      createdAt: editingPrompt?.createdAt && editingPrompt.id !== "" ? editingPrompt.createdAt : new Date().toISOString(),
     };
 
     onSave(promptData);
     toast({
-      title: editingPrompt ? "Prompt updated" : "Prompt added",
-      description: editingPrompt 
+      title: editingPrompt?.id ? "Prompt updated" : "Prompt added",
+      description: editingPrompt?.id 
         ? "Your prompt has been successfully updated" 
         : "Your prompt has been successfully added",
     });
@@ -73,7 +78,7 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {editingPrompt ? "Edit Prompt" : "Add New Prompt"}
+            {editingPrompt?.id ? "Edit Prompt" : "Add New Prompt"}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6 py-4">
@@ -104,7 +109,7 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
             onClick={handleSubmit}
             className="bg-purple-500 hover:bg-purple-700"
           >
-            {editingPrompt ? "Update Prompt" : "Save Prompt"}
+            {editingPrompt?.id ? "Update Prompt" : "Save Prompt"}
           </Button>
         </DialogFooter>
       </DialogContent>
