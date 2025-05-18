@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import TagInput from "./TagInput";
 import { Prompt, Tag } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface PromptFormProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface PromptFormProps {
 const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps) => {
   const [text, setText] = useState("");
   const [tags, setTags] = useState<Tag[]>([]);
+  const [type, setType] = useState<"system" | "task">("task");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -29,9 +31,12 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
       } else {
         setTags([]);
       }
+      // Set type if it exists, otherwise default to task
+      setType(editingPrompt.type || "task");
     } else {
       setText("");
       setTags([]);
+      setType("task");
     }
   }, [editingPrompt, isOpen]);
 
@@ -60,6 +65,7 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
       id: editingPrompt?.id && editingPrompt.id !== "" ? editingPrompt.id : Date.now().toString(),
       text: text.trim(),
       tags,
+      type,
       createdAt: editingPrompt?.createdAt && editingPrompt.id !== "" ? editingPrompt.createdAt : new Date().toISOString(),
     };
 
@@ -82,6 +88,24 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6 py-4">
+          <div className="space-y-2">
+            <Label>Prompt Type</Label>
+            <RadioGroup 
+              value={type} 
+              onValueChange={(value) => setType(value as "system" | "task")}
+              className="flex space-x-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="system" id="prompt-system" />
+                <Label htmlFor="prompt-system">System Prompt</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="task" id="prompt-task" />
+                <Label htmlFor="prompt-task">Task Prompt</Label>
+              </div>
+            </RadioGroup>
+          </div>
+          
           <div className="space-y-2">
             <Label htmlFor="prompt">Prompt Text</Label>
             <Textarea

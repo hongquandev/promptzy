@@ -9,10 +9,15 @@ export interface Prompt {
   text: string;
   tags: Tag[];
   createdAt: string;
+  type?: "system" | "task"; // Optional type field
 }
 
 export interface AIResponse {
   text: string;
   loading: boolean;
   error: string | null;
+}
+
+export interface AIGenerateOptions {
+  promptType: "system" | "task";
 }

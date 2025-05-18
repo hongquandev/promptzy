@@ -3,18 +3,28 @@ import { useState, useRef } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { AIResponse } from "@/types";
+import { AIResponse, AIGenerateOptions } from "@/types";
 import { Bot, ChevronDown, ChevronUp, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 interface AIAssistantProps {
   onUsePrompt: (text: string) => void;
 }
 
+const SYSTEM_PROMPT = `You are a helpful AI prompt generator. Your task is to create clear, effective prompts based on the user's request.
+
+For SYSTEM prompts: Create concise instructions that define the AI's role, personality, constraints, and knowledge. These should guide the AI's overall behavior without asking it to perform specific tasks.
+
+For TASK prompts: Create specific instructions that request the AI to complete a particular task, answer a question, or provide information on a topic.
+
+Make all prompts clear, specific, and well-structured. Avoid ambiguity and provide sufficient context.`;
+
 const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
+  const [promptType, setPromptType] = useState<"system" | "task">("task");
   const [response, setResponse] = useState<AIResponse>({
     text: "",
     loading: false,
@@ -40,20 +50,56 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
     });
 
     try {
-      const encodedPrompt = encodeURIComponent(prompt);
-      const url = `https://text.pollinations.ai/${encodedPrompt}?model=openai&private=true`;
+      let userPrompt = '';
       
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+      if (promptType === "system") {
+        userPrompt = `Generate a SYSTEM PROMPT for: ${prompt}. This should define an AI's role, personality, and constraints without asking it to perform specific tasks.`;
+      } else {
+        userPrompt = `Generate a TASK PROMPT for: ${prompt}. This should provide specific instructions for an AI to complete a particular task.`;
       }
       
-      const text = await response.text();
+      const encodedPrompt = encodeURIComponent(userPrompt);
+      // Use stream=true for streaming, model=openai-large, and private=true
+      const url = `https://text.pollinations.ai/${encodedPrompt}?model=openai-large&private=true&stream=true&system=${encodeURIComponent(SYSTEM_PROMPT)}`;
       
-      setResponse({
-        text,
-        loading: false,
-        error: null
+      // Set up event source for streaming
+      const eventSource = new EventSource(url);
+      let fullText = '';
+      
+      eventSource.onmessage = (event) => {
+        const newText = event.data;
+        fullText += newText;
+        setResponse({
+          text: fullText,
+          loading: true,
+          error: null
+        });
+      };
+      
+      eventSource.onerror = (error) => {
+        eventSource.close();
+        setResponse({
+          text: fullText || "",
+          loading: false,
+          error: error instanceof Error ? error.message : "Failed to generate content"
+        });
+        
+        if (!fullText) {
+          toast({
+            title: "Error",
+            description: "Failed to generate content. Please try again.",
+            variant: "destructive",
+          });
+        }
+      };
+      
+      eventSource.addEventListener('done', () => {
+        eventSource.close();
+        setResponse({
+          text: fullText,
+          loading: false,
+          error: null
+        });
       });
     } catch (error) {
       setResponse({
@@ -111,12 +157,37 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
         </CollapsibleTrigger>
         <CollapsibleContent className="p-4 space-y-4">
           <div className="space-y-2">
+            <label htmlFor="promptType" className="text-sm font-medium text-muted-foreground">
+              What type of prompt do you want to generate?
+            </label>
+            <RadioGroup 
+              value={promptType} 
+              onValueChange={(value) => setPromptType(value as "system" | "task")}
+              className="flex space-x-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="system" id="system" />
+                <Label htmlFor="system">System Prompt</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="task" id="task" />
+                <Label htmlFor="task">Task Prompt</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          <div className="space-y-2">
             <label htmlFor="prompt" className="text-sm font-medium text-muted-foreground">
-              What kind of prompt would you like to create?
+              {promptType === "system" 
+                ? "Describe the AI assistant's role and personality" 
+                : "What kind of task prompt would you like to create?"}
             </label>
             <Textarea
               id="prompt"
-              placeholder="E.g., Create a prompt for a fantasy story about dragons"
+              placeholder={promptType === "system" 
+                ? "E.g., A friendly customer service assistant that helps with product inquiries" 
+                : "E.g., Create a prompt for writing a persuasive email"
+              }
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               className="min-h-[80px] bg-secondary/50 border-secondary"
