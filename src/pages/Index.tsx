@@ -1,12 +1,135 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { useState, useEffect } from "react";
+import Header from "@/components/Header";
+import SearchInput from "@/components/SearchInput";
+import TagFilter from "@/components/TagFilter";
+import PromptCard from "@/components/PromptCard";
+import EmptyState from "@/components/EmptyState";
+import PromptForm from "@/components/PromptForm";
+import { Prompt, Tag } from "@/types";
+import { getPrompts, savePrompt, deletePrompt, getAllTags } from "@/lib/promptStore";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
+  const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Load prompts and tags from localStorage
+    const loadedPrompts = getPrompts();
+    setPrompts(loadedPrompts);
+    
+    const loadedTags = getAllTags();
+    setAllTags(loadedTags);
+  }, []);
+
+  const handleAddPrompt = () => {
+    setEditingPrompt(null);
+    setIsFormOpen(true);
+  };
+
+  const handleEditPrompt = (prompt: Prompt) => {
+    setEditingPrompt(prompt);
+    setIsFormOpen(true);
+  };
+
+  const handleSavePrompt = (promptData: Prompt) => {
+    // Save to localStorage
+    savePrompt(promptData);
+    
+    // Update state
+    const updatedPrompts = editingPrompt 
+      ? prompts.map(p => p.id === promptData.id ? promptData : p)
+      : [promptData, ...prompts];
+    
+    setPrompts(updatedPrompts);
+    
+    // Update all tags
+    const updatedTags = getAllTags();
+    setAllTags(updatedTags);
+  };
+
+  const handleDeletePrompt = (id: string) => {
+    // Delete from localStorage
+    deletePrompt(id);
+    
+    // Update state
+    const updatedPrompts = prompts.filter(p => p.id !== id);
+    setPrompts(updatedPrompts);
+    
+    // Update all tags
+    const updatedTags = getAllTags();
+    setAllTags(updatedTags);
+    
+    toast({
+      title: "Prompt deleted",
+      description: "Your prompt has been successfully deleted",
+    });
+  };
+
+  const handleToggleTag = (tagId: string) => {
+    setSelectedTags(prevTags => 
+      prevTags.includes(tagId) 
+        ? prevTags.filter(id => id !== tagId)
+        : [...prevTags, tagId]
+    );
+  };
+
+  const filteredPrompts = prompts.filter(prompt => {
+    // Filter by search term
+    const matchesSearch = searchTerm 
+      ? prompt.text.toLowerCase().includes(searchTerm.toLowerCase())
+      : true;
+    
+    // Filter by selected tags
+    const matchesTags = selectedTags.length > 0 
+      ? selectedTags.every(tagId => prompt.tags.some(tag => tag.id === tagId))
+      : true;
+    
+    return matchesSearch && matchesTags;
+  });
+
+  const isFiltered = searchTerm !== "" || selectedTags.length > 0;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="container mx-auto py-8 px-4 min-h-screen max-w-5xl">
+      <Header onAddPrompt={handleAddPrompt} />
+      
+      <div className="mb-8 space-y-6">
+        <SearchInput searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+        <TagFilter 
+          allTags={allTags} 
+          selectedTags={selectedTags} 
+          onToggleTag={handleToggleTag} 
+        />
       </div>
+      
+      {filteredPrompts.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredPrompts.map((prompt) => (
+            <PromptCard
+              key={prompt.id}
+              prompt={prompt}
+              onEdit={handleEditPrompt}
+              onDelete={handleDeletePrompt}
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptyState onAddPrompt={handleAddPrompt} isFiltered={isFiltered} />
+      )}
+      
+      <PromptForm
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSave={handleSavePrompt}
+        editingPrompt={editingPrompt}
+      />
     </div>
   );
 };
