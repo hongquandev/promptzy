@@ -32,6 +32,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
   });
   const { toast } = useToast();
   const responseRef = useRef<HTMLDivElement>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   const handleGeneratePrompt = async () => {
     if (!prompt.trim()) {
@@ -41,6 +42,12 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
         variant: "destructive",
       });
       return;
+    }
+
+    // Clean up any existing event source
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
     }
 
     setResponse({
@@ -59,25 +66,55 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
       }
       
       const encodedPrompt = encodeURIComponent(userPrompt);
+      const encodedSystemPrompt = encodeURIComponent(SYSTEM_PROMPT);
       // Use stream=true for streaming, model=openai-large, and private=true
-      const url = `https://text.pollinations.ai/${encodedPrompt}?model=openai-large&private=true&stream=true&system=${encodeURIComponent(SYSTEM_PROMPT)}`;
+      const url = `https://text.pollinations.ai/${encodedPrompt}?model=openai-large&private=true&stream=true&system=${encodedSystemPrompt}`;
       
-      // Set up event source for streaming
+      // Create a new event source
       const eventSource = new EventSource(url);
+      eventSourceRef.current = eventSource;
       let fullText = '';
       
       eventSource.onmessage = (event) => {
-        const newText = event.data;
-        fullText += newText;
-        setResponse({
-          text: fullText,
-          loading: true,
-          error: null
-        });
+        try {
+          // Only add the actual content, not the JSON metadata
+          if (event.data.startsWith("{")) {
+            const parsedData = JSON.parse(event.data);
+            // Check for content in the delta if this is a streaming chunk
+            if (parsedData.choices && parsedData.choices[0] && parsedData.choices[0].delta) {
+              const content = parsedData.choices[0].delta.content;
+              if (content) {
+                fullText += content;
+                setResponse({
+                  text: fullText,
+                  loading: true,
+                  error: null
+                });
+              }
+            }
+          } else {
+            // If it's not JSON, it's probably just the content
+            fullText += event.data;
+            setResponse({
+              text: fullText,
+              loading: true,
+              error: null
+            });
+          }
+        } catch (error) {
+          // If we can't parse as JSON, just add the raw data
+          fullText += event.data;
+          setResponse({
+            text: fullText,
+            loading: true,
+            error: null
+          });
+        }
       };
       
       eventSource.onerror = (error) => {
         eventSource.close();
+        eventSourceRef.current = null;
         setResponse({
           text: fullText || "",
           loading: false,
@@ -95,6 +132,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
       
       eventSource.addEventListener('done', () => {
         eventSource.close();
+        eventSourceRef.current = null;
         setResponse({
           text: fullText,
           loading: false,
@@ -116,6 +154,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
     }
   };
 
+  // Cleanup event source when component unmounts
   const handleCopyResponse = () => {
     if (response.text) {
       navigator.clipboard.writeText(response.text);
