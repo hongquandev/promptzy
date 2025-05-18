@@ -26,11 +26,7 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
     if (editingPrompt) {
       setText(editingPrompt.text);
       // Only copy tags if the prompt has an id (meaning it's not a new AI-generated prompt)
-      if (editingPrompt.id) {
-        setTags([...editingPrompt.tags]);
-      } else {
-        setTags([]);
-      }
+      setTags(editingPrompt.tags ? [...editingPrompt.tags] : []);
       // Set type if it exists, otherwise default to task
       setType(editingPrompt.type || "task");
     } else {
@@ -61,14 +57,18 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
       return;
     }
 
+    // Make sure we have a valid prompt object with all required fields
     const promptData: Prompt = {
       id: editingPrompt?.id && editingPrompt.id !== "" ? editingPrompt.id : Date.now().toString(),
       text: text.trim(),
-      tags,
-      type,
+      tags: tags || [], // Ensure tags is an array (even if empty)
+      type: type,
       createdAt: editingPrompt?.createdAt && editingPrompt.id !== "" ? editingPrompt.createdAt : new Date().toISOString(),
     };
 
+    // Debug log to see what's being saved
+    console.log("Saving prompt:", promptData);
+    
     onSave(promptData);
     toast({
       title: editingPrompt?.id ? "Prompt updated" : "Prompt added",

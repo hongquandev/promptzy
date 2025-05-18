@@ -40,19 +40,31 @@ const Index = () => {
   };
 
   const handleSavePrompt = (promptData: Prompt) => {
+    // Ensure promptData has all required fields
+    const completePromptData: Prompt = {
+      id: promptData.id || Date.now().toString(),
+      text: promptData.text,
+      tags: promptData.tags || [],
+      type: promptData.type || "task",
+      createdAt: promptData.createdAt || new Date().toISOString(),
+    };
+    
     // Save to localStorage
-    savePrompt(promptData);
+    savePrompt(completePromptData);
     
     // Update state
-    const updatedPrompts = editingPrompt 
-      ? prompts.map(p => p.id === promptData.id ? promptData : p)
-      : [promptData, ...prompts];
+    const updatedPrompts = editingPrompt?.id 
+      ? prompts.map(p => p.id === completePromptData.id ? completePromptData : p)
+      : [completePromptData, ...prompts];
     
     setPrompts(updatedPrompts);
     
     // Update all tags
     const updatedTags = getAllTags();
     setAllTags(updatedTags);
+    
+    console.log("Prompt saved:", completePromptData);
+    console.log("Updated prompts:", updatedPrompts);
   };
 
   const handleDeletePrompt = (id: string) => {
@@ -83,16 +95,19 @@ const Index = () => {
   
   const handleUseAIPrompt = (text: string) => {
     // Create a new prompt with the AI-generated text
-    setEditingPrompt(null);
-    // Open the form with the AI text already populated
-    setIsFormOpen(true);
-    // We'll pass the text to the form by creating a temporary prompt
-    setEditingPrompt({
-      id: "",
+    // Generate a temporary ID for the new prompt
+    const tempPrompt: Prompt = {
+      id: "", // Empty ID because it's not saved yet
       text: text,
-      tags: [],
+      tags: [], // Start with empty tags array
+      type: "task", // Default to task type
       createdAt: ""
-    });
+    };
+    
+    // Open the form with the AI text already populated
+    setEditingPrompt(tempPrompt);
+    setIsFormOpen(true);
+    console.log("Using AI prompt:", tempPrompt);
   };
 
   const filteredPrompts = prompts.filter(prompt => {
