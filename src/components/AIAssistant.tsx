@@ -74,6 +74,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
       const eventSource = new EventSource(url);
       eventSourceRef.current = eventSource;
       let fullText = '';
+      let hasReceivedContent = false;
       
       eventSource.onmessage = (event) => {
         try {
@@ -85,6 +86,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
               const content = parsedData.choices[0].delta.content;
               if (content) {
                 fullText += content;
+                hasReceivedContent = true;
                 setResponse({
                   text: fullText,
                   loading: true,
@@ -95,6 +97,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
           } else {
             // If it's not JSON, it's probably just the content
             fullText += event.data;
+            hasReceivedContent = true;
             setResponse({
               text: fullText,
               loading: true,
@@ -104,6 +107,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
         } catch (error) {
           // If we can't parse as JSON, just add the raw data
           fullText += event.data;
+          hasReceivedContent = true;
           setResponse({
             text: fullText,
             loading: true,
@@ -115,17 +119,26 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
       eventSource.onerror = (error) => {
         eventSource.close();
         eventSourceRef.current = null;
-        setResponse({
-          text: fullText || "",
-          loading: false,
-          error: error instanceof Error ? error.message : "Failed to generate content"
-        });
         
-        if (!fullText) {
+        // Only show error if we haven't received any content
+        if (!hasReceivedContent || !fullText.trim()) {
+          setResponse({
+            text: fullText || "",
+            loading: false,
+            error: error instanceof Error ? error.message : "Failed to generate content"
+          });
+          
           toast({
             title: "Error",
             description: "Failed to generate content. Please try again.",
             variant: "destructive",
+          });
+        } else {
+          // We received content before the error, so treat it as a success
+          setResponse({
+            text: fullText,
+            loading: false,
+            error: null
           });
         }
       };
@@ -269,7 +282,8 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
             </div>
           )}
           
-          {response.error && (
+          {/* Only show the error message if there is an error AND no valid response text */}
+          {response.error && !response.text && (
             <div className="p-3 bg-destructive/20 border border-destructive/40 rounded-md text-sm text-destructive">
               {response.error}
             </div>
