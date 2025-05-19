@@ -1,4 +1,8 @@
-# 🚀 Prompt Dashboard
+<p align="center">
+  <img src="public/icon.png" alt="Dashboard Icon" width="200" height="200" />
+</p>
+
+# 🚀 AI Prompt Dashboard
 
 A modern web application for managing and organizing your AI prompts, with tagging, search, and cloud synchronization.
 
@@ -10,7 +14,7 @@ A modern web application for managing and organizing your AI prompts, with taggi
 - **Organize AI Prompts**: Store, edit, and categorize prompts for various AI models
 - **Custom Tagging**: Organize prompts with custom tags for easy retrieval
 - **Powerful Search**: Find the perfect prompt with full-text search and tag filtering
-- **Dual Storage**: 
+- **Dual Storage**:
   - Store prompts locally in your browser
   - Cloud sync with Supabase for cross-device access
   - Optional hybrid mode to sync between both
@@ -48,22 +52,24 @@ yarn dev
 ## 🔧 Configuration
 
 ### Local Storage
+
 By default, the application uses browser localStorage - no configuration needed!
 
 ### Supabase Configuration
+
 To use cloud storage features:
 
 1. Create a Supabase account and project at [supabase.com](https://supabase.com)
-
 2. Configure your Supabase credentials:
+
    - Open the Prompt Dashboard
    - Go to Settings (gear icon)
    - Select "Supabase" or "Both" as your storage option
    - Enter your Supabase Project URL and API Key
      - Find these in your Supabase dashboard under Project Settings → API
    - Click "Test Connection" to verify your credentials
-
 3. Create the required database table:
+
    - After connecting, you'll need to set up the prompts table
    - Click the "Open Supabase SQL Editor" button in the settings
    - Copy and paste the following SQL:
@@ -84,7 +90,6 @@ To use cloud storage features:
      comments INTEGER DEFAULT 0
    );
    ```
-
 4. Run the SQL to create the table
 5. Return to the Prompt Dashboard and click "Test Connection" again to verify the table setup
 6. Save your settings
@@ -134,4 +139,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Made with ❤️ by [Pink Pixel](https://pinkpixel.dev) 
+Made with ❤️ by [Pink Pixel](https://pinkpixel.dev)
