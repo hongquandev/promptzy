@@ -87,6 +87,10 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
               if (content) {
                 fullText += content;
                 hasReceivedContent = true;
+                
+                // Remove [DONE] marker from the text if present
+                fullText = fullText.replace(/\[DONE\]/g, "");
+                
                 setResponse({
                   text: fullText,
                   loading: true,
@@ -97,6 +101,9 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
           } else {
             // If it's not JSON, it's probably just the content
             fullText += event.data;
+            // Remove [DONE] marker from the text if present
+            fullText = fullText.replace(/\[DONE\]/g, "");
+            
             hasReceivedContent = true;
             setResponse({
               text: fullText,
@@ -107,6 +114,9 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
         } catch (error) {
           // If we can't parse as JSON, just add the raw data
           fullText += event.data;
+          // Remove [DONE] marker from the text if present
+          fullText = fullText.replace(/\[DONE\]/g, "");
+          
           hasReceivedContent = true;
           setResponse({
             text: fullText,
@@ -135,6 +145,9 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
           });
         } else {
           // We received content before the error, so treat it as a success
+          // Final cleanup of any [DONE] markers
+          fullText = fullText.replace(/\[DONE\]/g, "");
+          
           setResponse({
             text: fullText,
             loading: false,
@@ -146,6 +159,10 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
       eventSource.addEventListener('done', () => {
         eventSource.close();
         eventSourceRef.current = null;
+        
+        // Final cleanup of any [DONE] markers
+        fullText = fullText.replace(/\[DONE\]/g, "");
+        
         setResponse({
           text: fullText,
           loading: false,

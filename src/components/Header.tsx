@@ -1,13 +1,18 @@
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Settings } from "lucide-react";
+import SettingsDialog from './SettingsDialog';
 
 interface HeaderProps {
   onAddPrompt: () => void;
+  storageType: "local" | "supabase" | "both";
+  onStorageTypeChange: (type: "local" | "supabase" | "both") => void;
 }
 
-const Header = ({ onAddPrompt }: HeaderProps) => {
+const Header = ({ onAddPrompt, storageType, onStorageTypeChange }: HeaderProps) => {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   return (
     <header className="flex justify-between items-center mb-8">
       <div>
@@ -18,13 +23,31 @@ const Header = ({ onAddPrompt }: HeaderProps) => {
           Manage and organize your AI prompts
         </p>
       </div>
-      <Button 
-        onClick={onAddPrompt} 
-        className="bg-purple-500 hover:bg-purple-700 text-white"
-      >
-        <Plus className="w-4 h-4 mr-2" />
-        Add Prompt
-      </Button>
+      <div className="flex items-center space-x-2">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setIsSettingsOpen(true)}
+          className="text-muted-foreground hover:text-foreground"
+          title="Settings"
+        >
+          <Settings className="h-4 w-4" />
+        </Button>
+        <Button 
+          onClick={onAddPrompt} 
+          className="bg-purple-500 hover:bg-purple-700 text-white"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Prompt
+        </Button>
+      </div>
+
+      <SettingsDialog 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        storageType={storageType}
+        onStorageTypeChange={onStorageTypeChange}
+      />
     </header>
   );
 };

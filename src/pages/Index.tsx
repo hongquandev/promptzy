@@ -9,7 +9,11 @@ import PromptForm from "@/components/PromptForm";
 import AIAssistant from "@/components/AIAssistant";
 import { Prompt, Tag } from "@/types";
 import { getPrompts, savePrompt, deletePrompt, getAllTags } from "@/lib/promptStore";
+import { getPromptsFromSupabase, savePromptToSupabase, deletePromptFromSupabase, syncPromptsToSupabase } from "@/lib/supabasePromptStore";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+
+const STORAGE_TYPE_KEY = 'ai-prompts-storage-type';
 
 const Index = () => {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
@@ -18,16 +22,84 @@ const Index = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
+  const [storageType, setStorageType] = useState<"local" | "supabase" | "both">(() => {
+    const saved = localStorage.getItem(STORAGE_TYPE_KEY);
+    return saved ? JSON.parse(saved) : "local";
+  });
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const { toast } = useToast();
 
+  // Check Supabase auth status
   useEffect(() => {
-    // Load prompts and tags from localStorage
-    const loadedPrompts = getPrompts();
-    setPrompts(loadedPrompts);
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      setIsLoggedIn(!!data.session);
+    };
     
-    const loadedTags = getAllTags();
-    setAllTags(loadedTags);
+    checkAuth();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsLoggedIn(!!session);
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
+
+  // Load prompts based on storage type
+  useEffect(() => {
+    const loadPrompts = async () => {
+      // Always check local storage
+      const localPrompts = getPrompts();
+      
+      if (storageType === "local" || !isLoggedIn) {
+        setPrompts(localPrompts);
+        const localTags = getAllTags();
+        setAllTags(localTags);
+        return;
+      }
+      
+      try {
+        // For Supabase or both, fetch from Supabase
+        const supabasePrompts = await getPromptsFromSupabase();
+        
+        if (storageType === "supabase") {
+          setPrompts(supabasePrompts);
+        } else if (storageType === "both") {
+          // Merge local and Supabase prompts, preferring Supabase versions if IDs match
+          const supabaseIds = new Set(supabasePrompts.map(p => p.id));
+          const uniqueLocalPrompts = localPrompts.filter(p => !supabaseIds.has(p.id));
+          const mergedPrompts = [...supabasePrompts, ...uniqueLocalPrompts];
+          
+          setPrompts(mergedPrompts);
+          
+          // Sync local prompts to Supabase if using "both" storage
+          await syncPromptsToSupabase(uniqueLocalPrompts);
+        }
+      } catch (error) {
+        console.error("Error loading prompts from Supabase:", error);
+        // Fallback to local storage
+        setPrompts(localPrompts);
+        toast({
+          title: "Error loading cloud data",
+          description: "Falling back to local storage",
+          variant: "destructive",
+        });
+      }
+      
+      // Update tags based on current prompts
+      const loadedTags = getAllTags();
+      setAllTags(loadedTags);
+    };
+    
+    loadPrompts();
+  }, [storageType, isLoggedIn, toast]);
+
+  // Save storage type preference
+  useEffect(() => {
+    localStorage.setItem(STORAGE_TYPE_KEY, JSON.stringify(storageType));
+  }, [storageType]);
 
   const handleAddPrompt = () => {
     setEditingPrompt(null);
@@ -39,7 +111,11 @@ const Index = () => {
     setIsFormOpen(true);
   };
 
-  const handleSavePrompt = (promptData: Prompt) => {
+  const handleStorageTypeChange = (type: "local" | "supabase" | "both") => {
+    setStorageType(type);
+  };
+
+  const handleSavePrompt = async (promptData: Prompt) => {
     // Ensure promptData has all required fields
     const completePromptData: Prompt = {
       id: promptData.id || Date.now().toString(),
@@ -49,8 +125,30 @@ const Index = () => {
       createdAt: promptData.createdAt || new Date().toISOString(),
     };
     
-    // Save to localStorage
-    savePrompt(completePromptData);
+    // Save based on storage type
+    if (storageType === "local" || !isLoggedIn) {
+      // Save to localStorage only
+      savePrompt(completePromptData);
+    } else {
+      try {
+        // Save to Supabase
+        await savePromptToSupabase(completePromptData);
+        
+        // If "both", also save to local storage
+        if (storageType === "both") {
+          savePrompt(completePromptData);
+        }
+      } catch (error) {
+        console.error("Error saving to Supabase:", error);
+        toast({
+          title: "Error saving to cloud",
+          description: "Your prompt was saved locally instead",
+          variant: "destructive",
+        });
+        // Fallback to local storage
+        savePrompt(completePromptData);
+      }
+    }
     
     // Update state
     const updatedPrompts = editingPrompt?.id 
@@ -67,9 +165,31 @@ const Index = () => {
     console.log("Updated prompts:", updatedPrompts);
   };
 
-  const handleDeletePrompt = (id: string) => {
-    // Delete from localStorage
-    deletePrompt(id);
+  const handleDeletePrompt = async (id: string) => {
+    // Delete based on storage type
+    if (storageType === "local" || !isLoggedIn) {
+      // Delete from localStorage only
+      deletePrompt(id);
+    } else {
+      try {
+        // Delete from Supabase
+        await deletePromptFromSupabase(id);
+        
+        // If "both", also delete from local storage
+        if (storageType === "both") {
+          deletePrompt(id);
+        }
+      } catch (error) {
+        console.error("Error deleting from Supabase:", error);
+        toast({
+          title: "Error deleting from cloud",
+          description: "The prompt was only removed locally",
+          variant: "destructive",
+        });
+        // Fallback to local storage deletion
+        deletePrompt(id);
+      }
+    }
     
     // Update state
     const updatedPrompts = prompts.filter(p => p.id !== id);
@@ -128,7 +248,11 @@ const Index = () => {
 
   return (
     <div className="container mx-auto py-8 px-4 min-h-screen max-w-5xl">
-      <Header onAddPrompt={handleAddPrompt} />
+      <Header 
+        onAddPrompt={handleAddPrompt} 
+        storageType={storageType} 
+        onStorageTypeChange={handleStorageTypeChange} 
+      />
       
       <div className="mb-8 space-y-6">
         <SearchInput searchTerm={searchTerm} onSearchChange={setSearchTerm} />
@@ -161,7 +285,7 @@ const Index = () => {
         editingPrompt={editingPrompt}
       />
       
-      <AIAssistant onUsePrompt={handleUseAIPrompt} />
+      <AIAssistant onUsePrompt={handleUsePrompt} />
     </div>
   );
 };
