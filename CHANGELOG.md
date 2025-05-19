@@ -10,8 +10,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - System prompt configuration for the AI Assistant
 - Option to use default or custom system prompt in settings
+- Enhanced Supabase integration with user-configurable credentials
+- Better connection testing and error handling for Supabase
+- Comprehensive manual table setup guide with SQL code
+- Direct link to Supabase SQL Editor based on project URL
+- Step-by-step instructions for database setup
+- Copy-to-clipboard functionality for SQL setup code
+- Automatic synchronization when switching storage types
 - Integration with vector embeddings search
 - Workspace context in prompts
+
+### Changed
+- Improved Supabase client to dynamically use user-provided credentials
+- More robust error handling for cloud storage operations
+- Better fallback to local storage when cloud operations fail
+- Enhanced feedback during connection testing and table setup
+- Updated table creation flow to focus on manual setup via SQL Editor
+
+### Fixed
+- Table access error handling for Supabase environments
+- Permissions issues with automatic table creation
 
 ## [0.1.0] - 2025-05-19
 

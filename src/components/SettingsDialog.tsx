@@ -6,11 +6,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea"; 
 import { Checkbox } from "@/components/ui/checkbox";
-import { Settings, Database, CheckCircle, AlertCircle, Sparkles, RefreshCw } from "lucide-react";
+import { Settings, Database, CheckCircle, AlertCircle, Sparkles, RefreshCw, Code, Database as DatabaseIcon, Copy, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { testSupabaseConnection } from "@/lib/supabasePromptStore";
+import { testSupabaseConnection, checkTableExists, CREATE_TABLE_SQL } from "@/lib/supabasePromptStore";
 import { saveSystemPrompt, useDefaultPrompt, isUsingDefaultPrompt } from "@/lib/systemPromptStore";
 import { SYSTEM_PROMPT_DEFAULT } from "@/components/AIAssistant";
+import { createSupabaseClient } from "@/integrations/supabase/client";
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -34,6 +35,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   });
   const [isConnectionTesting, setIsConnectionTesting] = useState<boolean>(false);
   const [connectionStatus, setConnectionStatus] = useState<"untested" | "success" | "failed">("untested");
+  const [tableStatus, setTableStatus] = useState<"exists" | "missing" | "unknown">("unknown");
+  const [showSqlSetup, setShowSqlSetup] = useState<boolean>(false);
   const [customSystemPrompt, setCustomSystemPrompt] = useState<string>(() => {
     return localStorage.getItem('ai-system-prompt') || SYSTEM_PROMPT_DEFAULT;
   });
@@ -41,6 +44,19 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     return isUsingDefaultPrompt();
   });
   const { toast } = useToast();
+
+  const extractProjectId = (url: string): string => {
+    // Extract the project ID from the Supabase URL
+    // Example: https://abcdefghijklmn.supabase.co -> abcdefghijklmn
+    const match = url.match(/https?:\/\/([a-z0-9-]+)\.supabase\.co/);
+    return match ? match[1] : "";
+  };
+
+  const getSupabaseSqlEditorUrl = (): string => {
+    const projectId = extractProjectId(supabaseUrl);
+    if (!projectId) return "https://app.supabase.com/";
+    return `https://app.supabase.com/project/${projectId}/sql/new`;
+  };
 
   const handleTestConnection = async () => {
     if (!supabaseUrl || !supabaseKey) {
@@ -54,33 +70,65 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 
     setIsConnectionTesting(true);
     setConnectionStatus("untested");
+    setTableStatus("unknown");
+    setShowSqlSetup(false);
 
     // Temporarily store the credentials to test the connection
     localStorage.setItem('custom-supabase-url', supabaseUrl);
     localStorage.setItem('custom-supabase-key', supabaseKey);
 
+    // Test basic connection
     const isConnected = await testSupabaseConnection();
     
-    setIsConnectionTesting(false);
-    setConnectionStatus(isConnected ? "success" : "failed");
-    
-    if (isConnected) {
-      toast({
-        title: "Connection Successful",
-        description: "Successfully connected to your Supabase instance."
-      });
-    } else {
+    if (!isConnected) {
+      setIsConnectionTesting(false);
+      setConnectionStatus("failed");
       toast({
         title: "Connection Failed",
         description: "Could not connect to Supabase. Please check your credentials and try again.",
         variant: "destructive"
       });
-      // Remove temporarily stored credentials on failure
-      if (!storageType.includes("supabase")) {
-        localStorage.removeItem('custom-supabase-url');
-        localStorage.removeItem('custom-supabase-key');
-      }
+      return;
     }
+
+    // Check if table exists
+    const client = createSupabaseClient();
+    const tableExists = await checkTableExists(client);
+
+    if (tableExists) {
+      setTableStatus("exists");
+      setConnectionStatus("success");
+      setIsConnectionTesting(false);
+      toast({
+        title: "Connection Successful",
+        description: "Successfully connected to your Supabase instance with table access.",
+      });
+      return;
+    }
+
+    // Table doesn't exist, show SQL setup guidance
+    setTableStatus("missing");
+    setConnectionStatus("failed");
+    setShowSqlSetup(true);
+    toast({
+      title: "Table Setup Required",
+      description: "Connected to Supabase, but the prompts table doesn't exist. Please create it manually.",
+      variant: "destructive"
+    });
+    
+    setIsConnectionTesting(false);
+  };
+
+  const handleCopySql = () => {
+    navigator.clipboard.writeText(CREATE_TABLE_SQL.trim());
+    toast({
+      title: "SQL Copied",
+      description: "Table creation SQL copied to clipboard."
+    });
+  };
+
+  const openSupabaseSqlEditor = () => {
+    window.open(getSupabaseSqlEditorUrl(), '_blank');
   };
 
   const handleResetSystemPrompt = () => {
@@ -107,6 +155,20 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
             description: "Could not connect to Supabase with the provided credentials. Please check your settings.",
             variant: "destructive"
           });
+          return;
+        }
+
+        // Check if table exists
+        const client = createSupabaseClient();
+        const tableExists = await checkTableExists(client);
+        
+        if (!tableExists) {
+          toast({
+            title: "Supabase Table Required",
+            description: "Please create the prompts table in your Supabase instance before saving.",
+            variant: "destructive"
+          });
+          setShowSqlSetup(true);
           return;
         }
         
@@ -203,7 +265,10 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 
             {(selectedStorage === "supabase" || selectedStorage === "both") && (
               <div className="space-y-4 border border-border p-4 rounded-md">
-                <h3 className="text-sm font-medium">Custom Supabase Configuration</h3>
+                <div className="flex items-center gap-2">
+                  <DatabaseIcon className="h-4 w-4 text-blue-500" />
+                  <h3 className="text-sm font-medium">Supabase Configuration</h3>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Enter your Supabase project URL and anon key to connect to your own Supabase instance
                 </p>
@@ -254,6 +319,56 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     </div>
                   )}
                 </div>
+
+                {showSqlSetup && (
+                  <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md">
+                    <div className="flex items-start gap-2 mb-2">
+                      <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm font-medium text-amber-800 dark:text-amber-300">Table Setup Required</h4>
+                        <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                          You need to create the 'prompts' table in your Supabase SQL editor:
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="relative mt-2">
+                      <pre className="text-xs p-2 bg-gray-800 text-gray-100 rounded-md overflow-x-auto">{CREATE_TABLE_SQL.trim()}</pre>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="absolute top-1 right-1 h-6 w-6 p-0"
+                        onClick={handleCopySql}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    
+                    <div className="mt-3 flex flex-col gap-2">
+                      <p className="text-xs text-amber-700 dark:text-amber-400">
+                        Steps to create the table:
+                      </p>
+                      <ol className="text-xs text-amber-700 dark:text-amber-400 list-decimal pl-4 space-y-1">
+                        <li>Go to your Supabase dashboard</li>
+                        <li>Select your project</li> 
+                        <li>Navigate to SQL Editor</li>
+                        <li>Create a new query</li>
+                        <li>Paste the SQL code above</li>
+                        <li>Click "Run" to execute</li>
+                      </ol>
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="mt-2 h-8 text-xs flex items-center gap-1 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-900 hover:bg-amber-200 dark:hover:bg-amber-800 w-full justify-center"
+                        onClick={openSupabaseSqlEditor}
+                      >
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        Open Supabase SQL Editor
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="text-xs text-muted-foreground">
                   <p className="mb-2">To find your Supabase details:</p>

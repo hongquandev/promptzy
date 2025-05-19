@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Header from "@/components/Header";
 import SearchInput from "@/components/SearchInput";
 import TagFilter from "@/components/TagFilter";
@@ -8,11 +8,15 @@ import PromptForm from "@/components/PromptForm";
 import AIAssistant from "@/components/AIAssistant";
 import { Prompt, Tag } from "@/types";
 import { getPrompts, savePrompt, deletePrompt, getAllTags } from "@/lib/promptStore";
-import { getPromptsFromSupabase, savePromptToSupabase, deletePromptFromSupabase, syncPromptsToSupabase } from "@/lib/supabasePromptStore";
+import { getPromptsFromSupabase, savePromptToSupabase, deletePromptFromSupabase, syncPromptsToSupabase, testSupabaseConnection } from "@/lib/supabasePromptStore";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { createSupabaseClient } from "@/integrations/supabase/client";
 
+// Key for storage type preference in localStorage
 const STORAGE_TYPE_KEY = 'ai-prompts-storage-type';
+
+// Create a fresh Supabase client to handle authentication
+const supabase = createSupabaseClient();
 
 const Index = () => {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
@@ -26,25 +30,46 @@ const Index = () => {
     return saved ? JSON.parse(saved) : "local";
   });
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [supabaseConnected, setSupabaseConnected] = useState<boolean>(false);
   const { toast } = useToast();
+
+  // Function to check Supabase connection status
+  const checkSupabaseConnection = useCallback(async () => {
+    if (storageType === "local") {
+      setSupabaseConnected(false);
+      return false;
+    }
+    
+    try {
+      const isConnected = await testSupabaseConnection();
+      setSupabaseConnected(isConnected);
+      return isConnected;
+    } catch (error) {
+      console.error("Error checking Supabase connection:", error);
+      setSupabaseConnected(false);
+      return false;
+    }
+  }, [storageType]);
 
   // Check Supabase auth status
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
       setIsLoggedIn(!!data.session);
+      checkSupabaseConnection();
     };
     
     checkAuth();
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setIsLoggedIn(!!session);
+      checkSupabaseConnection();
     });
     
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [checkSupabaseConnection]);
 
   // Load prompts based on storage type
   useEffect(() => {
@@ -52,7 +77,7 @@ const Index = () => {
       // Always check local storage
       const localPrompts = getPrompts();
       
-      if (storageType === "local" || !isLoggedIn) {
+      if (storageType === "local" || !supabaseConnected) {
         setPrompts(localPrompts);
         const localTags = getAllTags();
         setAllTags(localTags);
@@ -93,7 +118,7 @@ const Index = () => {
     };
     
     loadPrompts();
-  }, [storageType, isLoggedIn, toast]);
+  }, [storageType, supabaseConnected, toast]);
 
   // Save storage type preference
   useEffect(() => {
@@ -110,8 +135,36 @@ const Index = () => {
     setIsFormOpen(true);
   };
 
-  const handleStorageTypeChange = (type: "local" | "supabase" | "both") => {
+  const handleStorageTypeChange = async (type: "local" | "supabase" | "both") => {
+    // If changing to Supabase or both, check connection first
+    if (type !== "local") {
+      const isConnected = await checkSupabaseConnection();
+      if (!isConnected) {
+        toast({
+          title: "Supabase Connection Failed",
+          description: "Could not connect to Supabase. Please check your settings.",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+    
     setStorageType(type);
+    
+    // If changing from Supabase to local, pull the prompts from Supabase first
+    if (storageType !== "local" && type === "local" && supabaseConnected) {
+      try {
+        const supabasePrompts = await getPromptsFromSupabase();
+        // Save all Supabase prompts to local storage
+        supabasePrompts.forEach(prompt => savePrompt(prompt));
+        toast({
+          title: "Prompts Synchronized",
+          description: "Your cloud prompts have been saved locally",
+        });
+      } catch (error) {
+        console.error("Error syncing from Supabase to local:", error);
+      }
+    }
   };
 
   const handleSavePrompt = async (promptData: Prompt) => {
@@ -125,7 +178,7 @@ const Index = () => {
     };
     
     // Save based on storage type
-    if (storageType === "local" || !isLoggedIn) {
+    if (storageType === "local" || !supabaseConnected) {
       // Save to localStorage only
       savePrompt(completePromptData);
     } else {
@@ -159,14 +212,11 @@ const Index = () => {
     // Update all tags
     const updatedTags = getAllTags();
     setAllTags(updatedTags);
-    
-    console.log("Prompt saved:", completePromptData);
-    console.log("Updated prompts:", updatedPrompts);
   };
 
   const handleDeletePrompt = async (id: string) => {
     // Delete based on storage type
-    if (storageType === "local" || !isLoggedIn) {
+    if (storageType === "local" || !supabaseConnected) {
       // Delete from localStorage only
       deletePrompt(id);
     } else {

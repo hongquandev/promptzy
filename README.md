@@ -54,35 +54,42 @@ By default, the application uses browser localStorage - no configuration needed!
 To use cloud storage features:
 
 1. Create a Supabase account and project at [supabase.com](https://supabase.com)
-2. Configure your database with the following schema:
+
+2. Configure your Supabase credentials:
+   - Open the Prompt Dashboard
+   - Go to Settings (gear icon)
+   - Select "Supabase" or "Both" as your storage option
+   - Enter your Supabase Project URL and API Key
+     - Find these in your Supabase dashboard under Project Settings → API
+   - Click "Test Connection" to verify your credentials
+
+3. Create the required database table:
+   - After connecting, you'll need to set up the prompts table
+   - Click the "Open Supabase SQL Editor" button in the settings
+   - Copy and paste the following SQL:
+
    ```sql
-   -- Prompts table
-   create table public.prompts (
-     id text primary key,
-     text text not null,
-     tags jsonb,
-     type text,
-     created_at timestamp with time zone default timezone('utc'::text, now())
+   CREATE TABLE IF NOT EXISTS prompts (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     content TEXT NOT NULL,
+     tags TEXT[] DEFAULT '{}',
+     createdat TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+     title TEXT,
+     category TEXT DEFAULT 'task',
+     description TEXT DEFAULT '',
+     user_id TEXT NOT NULL,
+     ispublic BOOLEAN DEFAULT false,
+     likes INTEGER DEFAULT 0,
+     views INTEGER DEFAULT 0,
+     comments INTEGER DEFAULT 0
    );
-
-   -- Set up row-level security
-   alter table public.prompts enable row level security;
-
-   create policy "Users can view own prompts" on public.prompts
-     for select using (auth.uid() = user_id);
-
-   create policy "Users can insert own prompts" on public.prompts
-     for insert with check (auth.uid() = user_id);
-
-   create policy "Users can update own prompts" on public.prompts
-     for update using (auth.uid() = user_id);
-
-   create policy "Users can delete own prompts" on public.prompts
-     for delete using (auth.uid() = user_id);
    ```
 
-3. Add your Supabase URL and anon key to the application:
-   - Update `/src/integrations/supabase/client.ts` with your project URL and anon key
+4. Run the SQL to create the table
+5. Return to the Prompt Dashboard and click "Test Connection" again to verify the table setup
+6. Save your settings
+
+The application will now use your Supabase instance for cloud storage!
 
 ## 📖 Usage
 
