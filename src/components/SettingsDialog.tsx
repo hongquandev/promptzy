@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
-import { Settings, Database } from "lucide-react";
+import { Settings, Database, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { testSupabaseConnection } from "@/lib/supabasePromptStore";
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -30,7 +31,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   const [supabaseKey, setSupabaseKey] = useState<string>(() => {
     return localStorage.getItem('custom-supabase-key') || "";
   });
-  const [showCustomFields, setShowCustomFields] = useState<boolean>(false);
+  const [isConnectionTesting, setIsConnectionTesting] = useState<boolean>(false);
+  const [connectionStatus, setConnectionStatus] = useState<"untested" | "success" | "failed">("untested");
   const { toast } = useToast();
 
   // Check if user is logged in to Supabase
@@ -51,12 +53,46 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     };
   }, []);
 
-  // Check if custom Supabase details exist
-  useEffect(() => {
-    const hasCustomConfig = localStorage.getItem('custom-supabase-url') && 
-                           localStorage.getItem('custom-supabase-key');
-    setShowCustomFields(true); // Always show custom fields
-  }, []);
+  const handleTestConnection = async () => {
+    if (!supabaseUrl || !supabaseKey) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both Supabase URL and API Key",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsConnectionTesting(true);
+    setConnectionStatus("untested");
+
+    // Temporarily store the credentials to test the connection
+    localStorage.setItem('custom-supabase-url', supabaseUrl);
+    localStorage.setItem('custom-supabase-key', supabaseKey);
+
+    const isConnected = await testSupabaseConnection();
+    
+    setIsConnectionTesting(false);
+    setConnectionStatus(isConnected ? "success" : "failed");
+    
+    if (isConnected) {
+      toast({
+        title: "Connection Successful",
+        description: "Successfully connected to your Supabase instance."
+      });
+    } else {
+      toast({
+        title: "Connection Failed",
+        description: "Could not connect to Supabase. Please check your credentials and try again.",
+        variant: "destructive"
+      });
+      // Remove temporarily stored credentials on failure
+      if (!storageType.includes("supabase")) {
+        localStorage.removeItem('custom-supabase-url');
+        localStorage.removeItem('custom-supabase-key');
+      }
+    }
+  };
 
   const handleSave = async () => {
     // Check if custom Supabase config is provided
@@ -66,11 +102,22 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
         localStorage.setItem('custom-supabase-url', supabaseUrl);
         localStorage.setItem('custom-supabase-key', supabaseKey);
         
+        // Test the connection before saving
+        const isConnected = await testSupabaseConnection();
+        if (!isConnected) {
+          toast({
+            title: "Supabase Connection Failed",
+            description: "Could not connect to Supabase with the provided credentials. Please check your settings.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
         toast({
           title: "Settings Saved",
-          description: "Custom Supabase configuration has been saved. Please refresh the page to apply changes."
+          description: "Custom Supabase configuration has been saved."
         });
-      } else if (!isLoggedIn) {
+      } else {
         toast({
           title: "Supabase Configuration Required",
           description: "Please enter your Supabase URL and API Key or choose Local Storage only.",
@@ -176,6 +223,32 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                       onChange={(e) => setSupabaseKey(e.target.value)}
                     />
                   </div>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleTestConnection}
+                    disabled={isConnectionTesting || !supabaseUrl || !supabaseKey}
+                    className="flex gap-2 items-center"
+                  >
+                    {isConnectionTesting ? "Testing..." : "Test Connection"}
+                  </Button>
+                  
+                  {connectionStatus === "success" && (
+                    <div className="flex items-center text-sm text-green-600 gap-1">
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Connected</span>
+                    </div>
+                  )}
+                  
+                  {connectionStatus === "failed" && (
+                    <div className="flex items-center text-sm text-red-600 gap-1">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>Failed</span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="text-xs text-muted-foreground">
