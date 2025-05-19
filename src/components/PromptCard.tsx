@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Prompt } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -11,8 +10,11 @@ interface PromptCardProps {
   onDelete: (id: string) => void;
 }
 
-const PromptCard = ({ prompt, onEdit, onDelete }: PromptCardProps) => {
+export default function PromptCard({ prompt, onEdit, onDelete }: PromptCardProps) {
   const [expanded, setExpanded] = useState(false);
+  
+  // Ensure we always have a type value
+  const promptType = prompt.type || "task";
 
   const toggleExpanded = () => {
     setExpanded(!expanded);
@@ -32,14 +34,27 @@ const PromptCard = ({ prompt, onEdit, onDelete }: PromptCardProps) => {
   const firstLine = prompt.text.split('\n')[0];
   const previewText = firstLine.length > 80 ? firstLine.substring(0, 80) + "..." : firstLine;
 
+  // Determine the prompt type display badge color
+  const typeColor = promptType === "system" 
+    ? "bg-blue-600/20 text-blue-400 border-blue-800/50" 
+    : "bg-amber-600/20 text-amber-400 border-amber-800/50";
+    
   return (
     <div className="prompt-card rounded-xl overflow-hidden shadow-md animate-fade-in">
-      <div 
-        className="p-4 cursor-pointer flex flex-col gap-2 btn-hover-effect"
-        onClick={toggleExpanded}
-      >
+      <div className="p-4 flex flex-col gap-2 btn-hover-effect">
+        {/* Add prompt type badge - always visible */}
+        <div className="flex items-center gap-2">
+          <div className={`px-2 py-0.5 text-xs font-medium rounded border ${typeColor}`}>
+            {promptType === "system" ? "SYSTEM" : "TASK"}
+          </div>
+        </div>
+        
         <div className="flex justify-between items-start">
-          <div className="flex-1 overflow-hidden text-sm">
+          {/* Make the text area clickable for expansion */}
+          <div 
+            className="flex-1 overflow-hidden text-sm cursor-pointer" 
+            onClick={toggleExpanded}
+          >
             <div className="text-muted-foreground text-xs">
               {formatDistanceToNow(new Date(prompt.createdAt), { addSuffix: true })}
             </div>
@@ -49,6 +64,7 @@ const PromptCard = ({ prompt, onEdit, onDelete }: PromptCardProps) => {
           </div>
           
           <div className="flex items-center gap-2 ml-2">
+            {/* Edit button */}
             <Button 
               variant="ghost" 
               size="icon" 
@@ -57,6 +73,8 @@ const PromptCard = ({ prompt, onEdit, onDelete }: PromptCardProps) => {
             >
               <Edit className="h-4 w-4" />
             </Button>
+            
+            {/* Delete button */}
             <Button 
               variant="ghost" 
               size="icon" 
@@ -65,10 +83,16 @@ const PromptCard = ({ prompt, onEdit, onDelete }: PromptCardProps) => {
             >
               <Trash className="h-4 w-4" />
             </Button>
+            
+            {/* Toggle button */}
             <Button 
               variant="ghost" 
               size="icon" 
               className="h-8 w-8 text-muted-foreground hover:text-white hover:bg-secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleExpanded();
+              }}
             >
               {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
@@ -95,6 +119,4 @@ const PromptCard = ({ prompt, onEdit, onDelete }: PromptCardProps) => {
       )}
     </div>
   );
-};
-
-export default PromptCard;
+}

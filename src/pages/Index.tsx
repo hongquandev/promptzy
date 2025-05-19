@@ -11,6 +11,18 @@ import { getPrompts, savePrompt, deletePrompt, getAllTags } from "@/lib/promptSt
 import { getPromptsFromSupabase, savePromptToSupabase, deletePromptFromSupabase, syncPromptsToSupabase, testSupabaseConnection } from "@/lib/supabasePromptStore";
 import { useToast } from "@/hooks/use-toast";
 import { createSupabaseClient } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 // Key for storage type preference in localStorage
 const STORAGE_TYPE_KEY = 'ai-prompts-storage-type';
@@ -32,6 +44,14 @@ const Index = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [supabaseConnected, setSupabaseConnected] = useState<boolean>(false);
   const { toast } = useToast();
+
+  // Delete confirmation state
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [suppressDeleteConfirm, setSuppressDeleteConfirm] = useState<boolean>(() => {
+    const saved = localStorage.getItem("suppressDeleteConfirm");
+    return saved ? JSON.parse(saved) : false;
+  });
 
   // Function to check Supabase connection status
   const checkSupabaseConnection = useCallback(async () => {
@@ -254,6 +274,31 @@ const Index = () => {
     });
   };
 
+  // Confirmation handlers
+  const handleDeleteClick = (id: string) => {
+    if (suppressDeleteConfirm) {
+      handleDeletePrompt(id);
+    } else {
+      setPendingDeleteId(id);
+      setIsDeleteConfirmOpen(true);
+    }
+  };
+  const confirmDelete = () => {
+    if (pendingDeleteId) {
+      handleDeletePrompt(pendingDeleteId);
+    }
+    setPendingDeleteId(null);
+    setIsDeleteConfirmOpen(false);
+  };
+  const cancelDelete = () => {
+    setPendingDeleteId(null);
+    setIsDeleteConfirmOpen(false);
+  };
+  const toggleSuppressDeleteConfirm = (checked: boolean) => {
+    setSuppressDeleteConfirm(checked);
+    localStorage.setItem("suppressDeleteConfirm", JSON.stringify(checked));
+  };
+
   const handleToggleTag = (tagId: string) => {
     setSelectedTags(prevTags => 
       prevTags.includes(tagId) 
@@ -313,13 +358,13 @@ const Index = () => {
       </div>
       
       {filteredPrompts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
           {filteredPrompts.map((prompt) => (
             <PromptCard
               key={prompt.id}
               prompt={prompt}
               onEdit={handleEditPrompt}
-              onDelete={handleDeletePrompt}
+              onDelete={handleDeleteClick}
             />
           ))}
         </div>
@@ -335,6 +380,29 @@ const Index = () => {
       />
       
       <AIAssistant onUsePrompt={handleUseAIPrompt} />
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogDescription>
+            Are you sure you want to delete this prompt?
+          </AlertDialogDescription>
+          <div className="flex items-center space-x-2 mt-4">
+            <Checkbox
+              id="suppress-delete-confirm"
+              checked={suppressDeleteConfirm}
+              onCheckedChange={(val) => toggleSuppressDeleteConfirm(!!val)}
+            />
+            <Label htmlFor="suppress-delete-confirm">Don't show this again</Label>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
