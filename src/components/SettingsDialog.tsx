@@ -7,7 +7,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Settings, Database, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { testSupabaseConnection } from "@/lib/supabasePromptStore";
 
 interface SettingsDialogProps {
@@ -24,7 +23,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   onStorageTypeChange
 }) => {
   const [selectedStorage, setSelectedStorage] = useState<"local" | "supabase" | "both">(storageType);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [supabaseUrl, setSupabaseUrl] = useState<string>(() => {
     return localStorage.getItem('custom-supabase-url') || "";
   });
@@ -34,24 +32,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   const [isConnectionTesting, setIsConnectionTesting] = useState<boolean>(false);
   const [connectionStatus, setConnectionStatus] = useState<"untested" | "success" | "failed">("untested");
   const { toast } = useToast();
-
-  // Check if user is logged in to Supabase
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      setIsLoggedIn(!!data.session);
-    };
-    
-    checkAuth();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsLoggedIn(!!session);
-    });
-    
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
 
   const handleTestConnection = async () => {
     if (!supabaseUrl || !supabaseKey) {

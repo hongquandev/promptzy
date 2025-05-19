@@ -45,8 +45,14 @@ const ensurePromptsTable = async (supabase: any) => {
         );
       `;
       
-      // Note: This requires RLS to be disabled or the user to have table creation privileges
-      // For simplicity, we're not handling this edge case here
+      // Execute the SQL through Supabase's RPC function
+      const { error: createError } = await supabase.rpc('execute_sql', { 
+        sql: createTableSql 
+      });
+      
+      if (createError) {
+        console.error("Error creating prompts table:", createError);
+      }
     }
   } catch (err) {
     console.error("Error checking or creating prompts table:", err);
@@ -85,7 +91,7 @@ export const getPromptsFromSupabase = async (): Promise<Prompt[]> => {
     }
     
     // Transform data to match our Prompt type
-    return data.map((item: any) => ({
+    return data.map((item: PromptsTable) => ({
       id: item.id || '',
       text: item.content || '', // Map content to text
       tags: Array.isArray(item.tags) ? item.tags.map((tagName: string) => ({
@@ -171,9 +177,9 @@ export const testSupabaseConnection = async (): Promise<boolean> => {
   
   try {
     // A simple query to test the connection
-    const { error } = await supabase.from('prompts').select('id').limit(1);
+    const { data, error } = await supabase.auth.getSession();
     
-    if (error && error.code !== '42P01') { // Ignore "relation does not exist" error
+    if (error) {
       console.error("Supabase connection test failed:", error);
       return false;
     }
