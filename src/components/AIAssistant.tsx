@@ -1,5 +1,4 @@
-
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,12 +7,14 @@ import { Bot, ChevronDown, ChevronUp, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { getSystemPrompt } from "@/lib/systemPromptStore";
 
 interface AIAssistantProps {
   onUsePrompt: (text: string) => void;
 }
 
-const SYSTEM_PROMPT = `You are a helpful AI prompt generator. Your task is to create clear, effective prompts based on the user's request.
+// Export the default system prompt so it can be used elsewhere
+export const SYSTEM_PROMPT_DEFAULT = `You are a helpful AI prompt generator. Your task is to create clear, effective prompts based on the user's request.
 
 For SYSTEM prompts: Create concise instructions that define the AI's role, personality, constraints, and knowledge. These should guide the AI's overall behavior without asking it to perform specific tasks.
 
@@ -30,9 +31,15 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
     loading: false,
     error: null
   });
+  const [systemPrompt, setSystemPrompt] = useState<string>(SYSTEM_PROMPT_DEFAULT);
   const { toast } = useToast();
   const responseRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+
+  // Load system prompt from storage when component mounts
+  useEffect(() => {
+    setSystemPrompt(getSystemPrompt());
+  }, []);
 
   const handleGeneratePrompt = async () => {
     if (!prompt.trim()) {
@@ -66,7 +73,8 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
       }
       
       const encodedPrompt = encodeURIComponent(userPrompt);
-      const encodedSystemPrompt = encodeURIComponent(SYSTEM_PROMPT);
+      // Use the system prompt from state (which comes from storage) instead of the hardcoded one
+      const encodedSystemPrompt = encodeURIComponent(systemPrompt);
       // Use stream=true for streaming, model=openai-large, and private=true
       const url = `https://text.pollinations.ai/${encodedPrompt}?model=openai-large&private=true&stream=true&system=${encodedSystemPrompt}`;
       
@@ -281,7 +289,6 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
               </div>
               <div className="flex gap-2">
                 <Button 
-                  size="sm" 
                   variant="outline" 
                   className="flex-1"
                   onClick={handleCopyResponse}
@@ -289,7 +296,6 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
                   <Copy className="mr-2 h-4 w-4" /> Copy
                 </Button>
                 <Button 
-                  size="sm" 
                   className="flex-1 bg-purple-500 hover:bg-purple-700"
                   onClick={handleUsePrompt}
                 >

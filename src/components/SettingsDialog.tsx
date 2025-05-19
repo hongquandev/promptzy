@@ -1,13 +1,16 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
-import { Settings, Database, CheckCircle, AlertCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea"; 
+import { Checkbox } from "@/components/ui/checkbox";
+import { Settings, Database, CheckCircle, AlertCircle, Sparkles, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { testSupabaseConnection } from "@/lib/supabasePromptStore";
+import { saveSystemPrompt, useDefaultPrompt, isUsingDefaultPrompt } from "@/lib/systemPromptStore";
+import { SYSTEM_PROMPT_DEFAULT } from "@/components/AIAssistant";
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -31,6 +34,12 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   });
   const [isConnectionTesting, setIsConnectionTesting] = useState<boolean>(false);
   const [connectionStatus, setConnectionStatus] = useState<"untested" | "success" | "failed">("untested");
+  const [customSystemPrompt, setCustomSystemPrompt] = useState<string>(() => {
+    return localStorage.getItem('ai-system-prompt') || SYSTEM_PROMPT_DEFAULT;
+  });
+  const [useDefaultSystemPrompt, setUseDefaultSystemPrompt] = useState<boolean>(() => {
+    return isUsingDefaultPrompt();
+  });
   const { toast } = useToast();
 
   const handleTestConnection = async () => {
@@ -74,6 +83,14 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     }
   };
 
+  const handleResetSystemPrompt = () => {
+    setCustomSystemPrompt(SYSTEM_PROMPT_DEFAULT);
+    toast({
+      title: "System Prompt Reset",
+      description: "The system prompt has been reset to default."
+    });
+  };
+
   const handleSave = async () => {
     // Check if custom Supabase config is provided
     if ((selectedStorage === "supabase" || selectedStorage === "both")) {
@@ -107,10 +124,18 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
       }
     }
     
+    // Save system prompt settings
+    if (useDefaultSystemPrompt) {
+      useDefaultPrompt(true);
+    } else {
+      useDefaultPrompt(false);
+      saveSystemPrompt(customSystemPrompt);
+    }
+    
     onStorageTypeChange(selectedStorage);
     toast({
       title: "Settings Saved",
-      description: `Storage type set to ${selectedStorage}.`
+      description: `Your settings have been updated.`
     });
     onClose();
   };
@@ -129,7 +154,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
         </DialogHeader>
         
         <div className="py-4">
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
               <h3 className="text-sm font-medium mb-3">Storage Options</h3>
               <RadioGroup 
@@ -208,7 +233,6 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 <div className="flex justify-between items-center">
                   <Button
                     variant="outline"
-                    size="sm"
                     onClick={handleTestConnection}
                     disabled={isConnectionTesting || !supabaseUrl || !supabaseKey}
                     className="flex gap-2 items-center"
@@ -241,6 +265,57 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 </div>
               </div>
             )}
+
+            <div className="space-y-4 border border-border p-4 rounded-md">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-purple-500" />
+                <h3 className="text-sm font-medium">AI Assistant Configuration</h3>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Customize the system prompt used by the AI Assistant to generate prompts
+              </p>
+
+              <div className="flex items-center space-x-2 mb-2">
+                <Checkbox 
+                  id="use-default-prompt" 
+                  checked={useDefaultSystemPrompt}
+                  onCheckedChange={(checked) => {
+                    setUseDefaultSystemPrompt(checked as boolean);
+                  }}
+                />
+                <Label htmlFor="use-default-prompt" className="text-sm">
+                  Use default system prompt
+                </Label>
+              </div>
+
+              <div className={useDefaultSystemPrompt ? "opacity-50" : ""}>
+                <div className="flex justify-between mb-2">
+                  <Label htmlFor="system-prompt" className="text-sm">
+                    System Prompt
+                  </Label>
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleResetSystemPrompt}
+                    className="h-6 text-xs flex items-center gap-1 text-muted-foreground"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    Reset to default
+                  </Button>
+                </div>
+                <Textarea
+                  id="system-prompt"
+                  value={customSystemPrompt}
+                  onChange={(e) => setCustomSystemPrompt(e.target.value)}
+                  className="min-h-[120px] resize-y"
+                  placeholder="Enter a system prompt for the AI Assistant"
+                  disabled={useDefaultSystemPrompt}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  This prompt defines how the AI Assistant generates prompts based on your requests.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
         
