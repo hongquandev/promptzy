@@ -27,6 +27,8 @@ A modern web application for managing and organizing your AI prompts, with taggi
 
 ## 🛠️ Installation
 
+### Local Development
+
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/prompt-dashboard.git
@@ -43,11 +45,15 @@ yarn install
 
 # Start the development server
 npm run dev
-# or 
+# or
 bun run dev
 # or
 yarn dev
 ```
+
+### Deployment
+
+For deploying to Cloudflare Pages or other platforms, see the [DEPLOYMENT.md](DEPLOYMENT.md) guide.
 
 ## 🔧 Configuration
 
@@ -114,6 +120,7 @@ The application will now use your Supabase instance for cloud storage!
 - TanStack Query
 - React Hook Form with Zod
 - Supabase for auth and storage
+- Cloudflare Pages for deployment
 
 ## 📋 Roadmap
 

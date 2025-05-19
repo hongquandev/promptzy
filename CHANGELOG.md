@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Integration with vector embeddings search
 - Workspace context in prompts
 - Delete confirmation dialog for prompt deletions, with "Don't show this again" option
+- Cloudflare Pages deployment configuration with wrangler.toml
+- GitHub Actions workflow for automated deployment
+- Comprehensive deployment guide (DEPLOYMENT.md)
 
 ### Changed
 - Improved Supabase client to dynamically use user-provided credentials
@@ -48,11 +51,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Responsive UI with Shadcn/UI components and Tailwind CSS
 
 ### Changed
-- Enhanced UI with improved styling 
+- Enhanced UI with improved styling
 - Icon-based send button
 - Automatic API key configuration
 
 ### Fixed
 - Storage synchronization issues
 - Tag management bugs
-- Form validation errors 
+- Form validation errors
