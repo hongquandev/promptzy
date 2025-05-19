@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import SearchInput from "@/components/SearchInput";
@@ -285,7 +284,7 @@ const Index = () => {
         editingPrompt={editingPrompt}
       />
       
-      <AIAssistant onUsePrompt={handleUsePrompt} />
+      <AIAssistant onUsePrompt={handleUseAIPrompt} />
     </div>
   );
 };

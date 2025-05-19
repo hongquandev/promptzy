@@ -13,7 +13,16 @@ export const getPromptsFromSupabase = async (): Promise<Prompt[]> => {
   }
   
   // Transform data to match our Prompt type
-  return data as Prompt[];
+  return data.map(item => ({
+    id: item.id,
+    text: item.content || '', // Map content to text
+    tags: Array.isArray(item.tags) ? item.tags.map(tagName => ({
+      id: tagName, // Using the tag name as the ID
+      name: tagName
+    })) : [],
+    createdAt: item.createdat || new Date().toISOString(),
+    type: 'task' // Default type
+  })) as Prompt[];
 };
 
 export const savePromptToSupabase = async (prompt: Prompt): Promise<boolean> => {
@@ -21,10 +30,17 @@ export const savePromptToSupabase = async (prompt: Prompt): Promise<boolean> => 
     .from('prompts')
     .upsert({
       id: prompt.id,
-      text: prompt.text,
-      tags: prompt.tags,
-      created_at: prompt.createdAt,
-      type: prompt.type || 'task'
+      content: prompt.text, // Map text to content
+      tags: prompt.tags.map(tag => tag.id), // Convert Tag objects to string IDs
+      createdat: prompt.createdAt,
+      title: prompt.text.substring(0, 50), // Use first 50 chars of text as title
+      category: prompt.type || 'task',
+      description: '',
+      user_id: 'anonymous', // Default user ID
+      ispublic: false,
+      likes: 0,
+      views: 0,
+      comments: 0
     });
   
   if (error) {
