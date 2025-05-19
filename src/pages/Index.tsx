@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Header from "@/components/Header";
 import SearchInput from "@/components/SearchInput";
 import TagFilter from "@/components/TagFilter";
@@ -52,6 +52,23 @@ const Index = () => {
     const saved = localStorage.getItem("suppressDeleteConfirm");
     return saved ? JSON.parse(saved) : false;
   });
+
+  // Responsive Masonry: calculate number of columns based on breakpoints
+  const [colCount, setColCount] = useState<number>(() => {
+    if (typeof window === "undefined") return 1;
+    if (window.matchMedia("(min-width: 1024px)").matches) return 3;
+    if (window.matchMedia("(min-width: 768px)").matches) return 2;
+    return 1;
+  });
+  useEffect(() => {
+    const updateCols = () => {
+      if (window.matchMedia("(min-width: 1024px)").matches) setColCount(3);
+      else if (window.matchMedia("(min-width: 768px)").matches) setColCount(2);
+      else setColCount(1);
+    };
+    window.addEventListener("resize", updateCols);
+    return () => window.removeEventListener("resize", updateCols);
+  }, []);
 
   // Function to check Supabase connection status
   const checkSupabaseConnection = useCallback(async () => {
@@ -340,6 +357,15 @@ const Index = () => {
 
   const isFiltered = searchTerm !== "" || selectedTags.length > 0;
 
+  // Distribute prompts into columns
+  const columns = useMemo(() => {
+    const cols: Prompt[][] = Array.from({ length: colCount }, () => []);
+    filteredPrompts.forEach((p, i) => {
+      cols[i % colCount].push(p);
+    });
+    return cols;
+  }, [filteredPrompts, colCount]);
+
   return (
     <div className="container mx-auto py-8 px-4 min-h-screen max-w-5xl">
       <Header 
@@ -358,14 +384,18 @@ const Index = () => {
       </div>
       
       {filteredPrompts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-          {filteredPrompts.map((prompt) => (
-            <PromptCard
-              key={prompt.id}
-              prompt={prompt}
-              onEdit={handleEditPrompt}
-              onDelete={handleDeleteClick}
-            />
+        <div className="flex gap-4 items-start">
+          {columns.map((col, colIdx) => (
+            <div key={colIdx} className="flex-1 flex flex-col gap-4">
+              {col.map(prompt => (
+                <PromptCard
+                  key={prompt.id}
+                  prompt={prompt}
+                  onEdit={handleEditPrompt}
+                  onDelete={handleDeleteClick}
+                />
+              ))}
+            </div>
           ))}
         </div>
       ) : (

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic synchronization when switching storage types
 - Integration with vector embeddings search
 - Workspace context in prompts
+- Delete confirmation dialog for prompt deletions, with "Don't show this again" option
 
 ### Changed
 - Improved Supabase client to dynamically use user-provided credentials
@@ -26,10 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better fallback to local storage when cloud operations fail
 - Enhanced feedback during connection testing and table setup
 - Updated table creation flow to focus on manual setup via SQL Editor
+- Prompt card list switched from CSS grid to responsive Masonry-style flex columns to isolate vertical expansion
 
 ### Fixed
 - Table access error handling for Supabase environments
 - Permissions issues with automatic table creation
+- `.btn-hover-effect` overlay no longer blocks pointer events on card controls
+- Expand/collapse toggle now only affects individual cards, not all cards
 
 ## [0.1.0] - 2025-05-19
 

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus, Settings } from "lucide-react";
@@ -17,6 +16,7 @@ const Header = ({ onAddPrompt, storageType, onStorageTypeChange }: HeaderProps) 
     <header className="flex justify-between items-center mb-8">
       <div>
         <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-300 to-purple-500 bg-clip-text text-transparent">
+          <img src="/icon.png" alt="Dashboard Icon" className="inline-block h-8 w-8 mr-2 align-middle" />
           AI Prompt Dashboard
         </h1>
         <p className="text-muted-foreground text-sm">
