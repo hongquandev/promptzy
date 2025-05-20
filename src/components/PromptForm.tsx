@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,7 @@ interface PromptFormProps {
 const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps) => {
   const [text, setText] = useState("");
   const [tags, setTags] = useState<Tag[]>([]);
-  const [type, setType] = useState<"system" | "task">("task");
+  const [type, setType] = useState<"system" | "task" | "image" | "video">("task");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -92,7 +91,7 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
             <Label>Prompt Type</Label>
             <RadioGroup 
               value={type} 
-              onValueChange={(value) => setType(value as "system" | "task")}
+              onValueChange={(value) => setType(value as "system" | "task" | "image" | "video")}
               className="flex space-x-4"
             >
               <div className="flex items-center space-x-2">
@@ -102,6 +101,14 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="task" id="prompt-task" />
                 <Label htmlFor="prompt-task">Task Prompt</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="image" id="prompt-image" />
+                <Label htmlFor="prompt-image">Image Prompt</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="video" id="prompt-video" />
+                <Label htmlFor="prompt-video">Video Prompt</Label>
               </div>
             </RadioGroup>
           </div>

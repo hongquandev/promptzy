@@ -138,7 +138,7 @@ export const getPromptsFromSupabase = async (): Promise<Prompt[]> => {
         name: tagName
       })) : [],
       createdAt: item.createdat || new Date().toISOString(),
-      type: (item.category as "task" | "system") || 'task' // Map category to type
+      type: (item.category as "system" | "task" | "image" | "video") || 'task' // Map category to type
     }));
   } catch (err) {
     console.error("Exception while fetching prompts:", err);

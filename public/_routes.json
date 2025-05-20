@@ -9,5 +9,10 @@
     "/*.ico",
     "/*.js",
     "/*.css"
-  ]
+  ],
+  "serve": {
+    "/*.html": "/index.html",
+    "/": "/index.html",
+    "/*": "/index.html"
+  }
 }

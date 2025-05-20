@@ -324,14 +324,14 @@ const Index = () => {
     );
   };
   
-  const handleUseAIPrompt = (text: string) => {
+  const handleUseAIPrompt = (text: string, promptType: "system" | "task" | "image" | "video") => {
     // Create a new prompt with the AI-generated text
     // Generate a temporary ID for the new prompt
     const tempPrompt: Prompt = {
       id: "", // Empty ID because it's not saved yet
       text: text,
       tags: [], // Start with empty tags array
-      type: "task", // Default to task type
+      type: promptType, // Use the selected AI assistant prompt type
       createdAt: ""
     };
     

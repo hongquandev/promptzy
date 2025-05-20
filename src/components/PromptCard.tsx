@@ -35,9 +35,13 @@ export default function PromptCard({ prompt, onEdit, onDelete }: PromptCardProps
   const previewText = firstLine.length > 80 ? firstLine.substring(0, 80) + "..." : firstLine;
 
   // Determine the prompt type display badge color
-  const typeColor = promptType === "system" 
-    ? "bg-blue-600/20 text-blue-400 border-blue-800/50" 
-    : "bg-amber-600/20 text-amber-400 border-amber-800/50";
+  const typeColor = promptType === "system"
+    ? "bg-blue-600/20 text-blue-400 border-blue-800/50"
+    : promptType === "task"
+      ? "bg-amber-600/20 text-amber-400 border-amber-800/50"
+      : promptType === "image"
+        ? "bg-green-600/20 text-green-400 border-green-800/50"
+        : "bg-purple-600/20 text-purple-400 border-purple-800/50";
     
   return (
     <div className="prompt-card rounded-xl overflow-hidden shadow-md animate-fade-in">
@@ -45,7 +49,13 @@ export default function PromptCard({ prompt, onEdit, onDelete }: PromptCardProps
         {/* Add prompt type badge - always visible */}
         <div className="flex items-center gap-2">
           <div className={`px-2 py-0.5 text-xs font-medium rounded border ${typeColor}`}>
-            {promptType === "system" ? "SYSTEM" : "TASK"}
+            {promptType === "system"
+              ? "SYSTEM"
+              : promptType === "task"
+                ? "TASK"
+                : promptType === "image"
+                  ? "IMAGE"
+                  : "VIDEO"}
           </div>
         </div>
         

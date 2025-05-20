@@ -113,6 +113,36 @@ Simply push changes to your connected GitHub repository. Cloudflare will automat
 2. Build the project: `npm run build`
 3. Deploy the updates: `wrangler pages deploy dist`
 
+## SPA Routing Configuration
+
+This application is a single-page application (SPA) that uses client-side routing. To ensure that all routes are handled correctly by Cloudflare Pages, the project includes a `_routes.json` file in the `public` directory with the following configuration:
+
+```json
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [
+    "/assets/*",
+    "/*.png",
+    "/*.svg",
+    "/*.jpg",
+    "/*.ico",
+    "/*.js",
+    "/*.css"
+  ],
+  "serve": {
+    "/*.html": "/index.html",
+    "/": "/index.html",
+    "/*": "/index.html"
+  }
+}
+```
+
+This configuration ensures that:
+- All routes are included by default
+- Static assets are excluded from the SPA routing
+- All non-asset routes are served with `index.html` to support client-side routing
+
 ## Troubleshooting
 
 ### Build Failures
@@ -131,6 +161,15 @@ If the application deploys but doesn't work correctly:
 1. Check browser console for errors
 2. Verify Supabase connection settings
 3. Ensure Content Security Policy in `wrangler.toml` allows all required connections
+4. Verify that the `_routes.json` file is correctly configured for SPA routing
+
+### Routing Issues
+
+If you experience routing issues (e.g., 404 errors when navigating to routes directly):
+
+1. Verify that the `_routes.json` file is correctly configured
+2. Ensure that the `serve` property is correctly set to serve `index.html` for all routes
+3. Check that the file is in the `public` directory so it's included in the build output
 
 ### CORS Issues
 

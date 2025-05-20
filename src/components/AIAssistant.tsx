@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { getSystemPrompt } from "@/lib/systemPromptStore";
 
 interface AIAssistantProps {
-  onUsePrompt: (text: string) => void;
+  onUsePrompt: (text: string, promptType: "system" | "task" | "image" | "video") => void;
 }
 
 // Export the default system prompt so it can be used elsewhere
@@ -20,12 +20,16 @@ For SYSTEM prompts: Create concise instructions that define the AI's role, perso
 
 For TASK prompts: Create specific instructions that request the AI to complete a particular task, answer a question, or provide information on a topic.
 
+For IMAGE prompts: Create detailed descriptions specifying visual elements, style, composition, colors, and subjects to guide image generation.
+
+For VIDEO prompts: Outline sequences, scenes, camera angles, transitions, duration, and style guidelines for video generation.
+
 Make all prompts clear, specific, and well-structured. Avoid ambiguity and provide sufficient context.`;
 
 const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
-  const [promptType, setPromptType] = useState<"system" | "task">("task");
+  const [promptType, setPromptType] = useState<"system" | "task" | "image" | "video">("task");
   const [response, setResponse] = useState<AIResponse>({
     text: "",
     loading: false,
@@ -68,8 +72,12 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
       
       if (promptType === "system") {
         userPrompt = `Generate a SYSTEM PROMPT for: ${prompt}. This should define an AI's role, personality, and constraints without asking it to perform specific tasks.`;
-      } else {
+      } else if (promptType === "task") {
         userPrompt = `Generate a TASK PROMPT for: ${prompt}. This should provide specific instructions for an AI to complete a particular task.`;
+      } else if (promptType === "image") {
+        userPrompt = `Generate an IMAGE PROMPT for: ${prompt}. This should describe the desired visual elements, style, composition, colors, and subjects.`;
+      } else {
+        userPrompt = `Generate a VIDEO PROMPT for: ${prompt}. This should outline the content, scenes, transitions, and style guidelines.`;
       }
       
       const encodedPrompt = encodeURIComponent(userPrompt);
@@ -205,7 +213,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
 
   const handleUsePrompt = () => {
     if (response.text) {
-      onUsePrompt(response.text);
+      onUsePrompt(response.text, promptType);
       toast({
         title: "Success",
         description: "AI response added as a new prompt"
@@ -239,7 +247,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
             </label>
             <RadioGroup 
               value={promptType} 
-              onValueChange={(value) => setPromptType(value as "system" | "task")}
+              onValueChange={(value) => setPromptType(value as "system" | "task" | "image" | "video")}
               className="flex space-x-4"
             >
               <div className="flex items-center space-x-2">
@@ -250,6 +258,14 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
                 <RadioGroupItem value="task" id="task" />
                 <Label htmlFor="task">Task Prompt</Label>
               </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="image" id="image" />
+                <Label htmlFor="image">Image Prompt</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="video" id="video" />
+                <Label htmlFor="video">Video Prompt</Label>
+              </div>
             </RadioGroup>
           </div>
 
@@ -257,13 +273,22 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
             <label htmlFor="prompt" className="text-sm font-medium text-muted-foreground">
               {promptType === "system" 
                 ? "Describe the AI assistant's role and personality" 
-                : "What kind of task prompt would you like to create?"}
+                : promptType === "task"
+                  ? "What kind of task prompt would you like to create?"
+                  : promptType === "image"
+                    ? "Describe the desired visual elements, style, composition, colors, and subjects"
+                    : "Outline the content, scenes, transitions, and style guidelines"
+              }
             </label>
             <Textarea
               id="prompt"
               placeholder={promptType === "system" 
                 ? "E.g., A friendly customer service assistant that helps with product inquiries" 
-                : "E.g., Create a prompt for writing a persuasive email"
+                : promptType === "task"
+                  ? "E.g., Create a prompt for writing a persuasive email"
+                  : promptType === "image"
+                    ? "E.g., Describe a sunset in a surreal style"
+                    : "E.g., Outline a 30-second video clip"
               }
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}

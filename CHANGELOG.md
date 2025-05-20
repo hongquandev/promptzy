@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cloudflare Pages deployment configuration with wrangler.toml
 - GitHub Actions workflow for automated deployment
 - Comprehensive deployment guide (DEPLOYMENT.md)
+- SPA routing configuration for Cloudflare Pages with _routes.json
 
 ### Changed
 - Improved Supabase client to dynamically use user-provided credentials
@@ -31,12 +32,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced feedback during connection testing and table setup
 - Updated table creation flow to focus on manual setup via SQL Editor
 - Prompt card list switched from CSS grid to responsive Masonry-style flex columns to isolate vertical expansion
+- Updated _routes.json to properly handle SPA routing in Cloudflare Pages
 
 ### Fixed
 - Table access error handling for Supabase environments
 - Permissions issues with automatic table creation
 - `.btn-hover-effect` overlay no longer blocks pointer events on card controls
 - Expand/collapse toggle now only affects individual cards, not all cards
+- Cloudflare Pages SPA routing issues by adding proper "serve" configuration
 
 ## [0.1.0] - 2025-05-19
 

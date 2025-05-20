@@ -1,106 +1,101 @@
 # 🚀 AI Prompt Dashboard
 
+**Last Updated:** 2025-05-19T21:24:10Z
+
 ## Project Overview
 
-The AI Prompt Dashboard is a modern web application designed for managing, organizing, and utilizing AI prompts. It serves as a centralized repository where users can create, edit, and categorize their collection of prompts for various AI models and use cases.
+The AI Prompt Dashboard is a modern Vite-based React application for managing, organizing, and utilizing AI prompts. It serves as a centralized repository where users can create, edit, categorize, and quickly access their collection of prompts across devices.
 
 ## ✨ Key Features
 
-- **Prompt Management**: Create, edit, view, and delete AI prompts
-- **Prompt Types**: Support for both system prompts and task prompts
-- **Tagging System**: Organize prompts with customizable tags
-- **Search & Filter**: Easily find prompts using full-text search and tag filtering
-- **Dual Storage Options**:
-  - Local storage (browser-based)
-  - Cloud storage (Supabase)
-  - Hybrid mode with synchronization between both
-- **AI Assistant**: Generate new prompt ideas with AI help using Pollinations.ai API
-- **User Authentication**: Supabase-powered login for cloud storage
-- **Responsive Design**: Clean, modern UI that works on all devices
+- **Prompt Management:** Create, edit, view, and delete AI prompts
+- **Prompt Types:** Support for both system prompts and task prompts
+- **Tagging System:** Organize prompts with customizable tags
+- **Search & Filter:** Full-text search and tag-based filtering
+- **Command Palette:** Quickly navigate and execute actions via keyboard (powered by cmdk)
+- **Dual Storage Options:**
+  - LocalStorage (offline-first)  
+  - Supabase (cloud persistence)  
+  - Hybrid mode with automatic sync and fallback
+- **AI Assistant:** Generate new prompt ideas using the Pollinations.ai API with streaming responses
+- **User Authentication & Sync:** Supabase-powered login with local fallback
+- **Theming & Responsive Design:** Dark/light mode toggles (Next-Themes) and mobile-friendly UI
 
 ## 🛠️ Technical Stack
 
-- **Frontend Framework**: React 18.3 with TypeScript
-- **Build Tool**: Vite 5.4
-- **Styling**: Tailwind CSS + Shadcn UI components
-- **State Management**: React Hooks
-- **Routing**: React Router 6
-- **Data Fetching**: TanStack Query
-- **Form Handling**: React Hook Form with Zod validation
-- **Backend/Cloud Storage**: Supabase
-- **Toast Notifications**: Custom toast hook and Sonner
+- **Framework:** React 18.3 (TypeScript)
+- **Bundler & Dev Server:** Vite 5.4
+- **Styling:** Tailwind CSS + Radix UI primitives (via Shadcn UI)
+- **Component Library:** Shadcn UI & Radix primitives
+- **State Management:** React Hooks + TanStack Query
+- **Routing:** React Router v6
+- **Forms & Validation:** React Hook Form & Zod
+- **Data Storage:** Supabase JS SDK + localStorage sync stores
+- **Notifications:** Sonner + custom toast hook
+- **Theming:** Next-Themes for dark/light mode
+- **Carousel:** Embla Carousel React
+- **Icons:** Lucide React
+- **Command Palette:** cmdk
+- **Date Handling:** date-fns
+
+## ⚙️ Configuration & Tooling
+
+- **TypeScript:** v5.5
+- **Linting:** ESLint
+- **Styling:** PostCSS & Tailwind CSS
+- **Deployment:** Cloudflare Pages (wrangler.toml)
+- **CI/CD:** GitHub Actions workflows (.github/workflows)
 
 ## 📁 Project Structure
 
-- `src/`: Main source code
-  - `components/`: UI components
-    - `ui/`: Shadcn UI components
-    - `AIAssistant.tsx`: AI-powered prompt generator
-    - `PromptCard.tsx`: Display component for individual prompts
-    - `PromptForm.tsx`: Form for adding/editing prompts
-    - `TagInput.tsx`: Component for managing tags
-  - `hooks/`: Custom React hooks
-    - `use-toast.ts`: Hook for toast notifications
-    - `use-mobile.tsx`: Hook for responsive design
-  - `integrations/`: Third-party integrations
-    - `supabase/`: Supabase client and types
-  - `lib/`: Utility functions and core logic
-    - `promptStore.ts`: Local storage operations
-    - `supabasePromptStore.ts`: Supabase storage operations
-    - `systemPromptStore.ts`: System prompt management
-  - `pages/`: Application pages
-    - `Index.tsx`: Main dashboard page
-  - `types/`: TypeScript type definitions
-- `public/`: Static assets
-- `supabase/`: Supabase configuration
+```
+prompt-dashboard/
+├── public/                 # Static assets
+├── src/                    # Source code
+│   ├── components/         # UI components
+│   │   ├── AIAssistant.tsx
+│   │   ├── PromptCard.tsx
+│   │   ├── PromptForm.tsx
+│   │   ├── TagInput.tsx
+│   │   ├── SearchInput.tsx
+│   │   ├── TagFilter.tsx
+│   │   ├── EmptyState.tsx
+│   │   ├── Header.tsx
+│   │   ├── SettingsDialog.tsx
+│   │   └── ui/             # Shadcn UI & Radix primitives
+│   ├── hooks/              # Custom React hooks (use-toast, use-mobile)
+│   ├── integrations/       # Third-party SDKs
+│   │   └── supabase/       # Supabase client & types
+│   ├── lib/                # Business logic & stores (promptStore, supabasePromptStore, systemPromptStore)
+│   ├── pages/              # Route pages (Index, NotFound)
+│   └── types/              # TypeScript definitions
+├── .github/                # CI/CD workflows
+├── wrangler.toml           # Cloudflare Pages config
+├── tailwind.config.ts      # Tailwind config
+├── vite.config.ts          # Vite config
+└── tsconfig.json           # TypeScript config
+```
 
-## 🔄 Data Flow
-
-1. **Local Storage**: Prompts are stored in the browser's localStorage
-   - Uses key-value pairs for prompts and tags
-   - Automatically extracts and stores unique tags
-2. **Supabase Storage**: Cloud storage option for persistence across devices
-   - Custom table schema for prompts with additional metadata
-   - User authentication for multi-user support
-3. **Dual Mode**: Can synchronize between local and cloud storage
-   - Fallback to local storage if cloud storage fails
-   - Option to use both simultaneously
-
-## 💻 Getting Started
+## 🚀 Getting Started
 
 1. Clone the repository
-2. Install dependencies: `npm install`, `bun install`, or `yarn install`
-3. Start the development server: `npm run dev`, `bun run dev`, or `yarn dev`
-4. Access the application at http://localhost:8080
+2. Install dependencies:
+   ```bash
+   npm install | yarn install | bun install
+   ```
+3. Start development server:
+   ```bash
+   npm run dev | yarn dev | bun run dev
+   ```
+4. Open the app at http://localhost:8080
 
-## 🔒 Authentication
+## 🔮 Future Enhancements
 
-The application uses Supabase authentication for cloud storage features. Users can:
-- Create an account or log in to access cloud storage
-- Use the application without authentication for local-only storage
-- Configure custom Supabase credentials in the settings
+- Prompt version history & diff tracking
+- AI prompt templates and presets
+- Shared prompt libraries and team collaboration
+- Advanced hierarchical tagging
+- Additional storage backends (e.g., NeonDB)
 
-## 🧠 AI Assistant
-
-The application includes an AI Assistant feature that:
-- Helps users generate new prompt ideas
-- Supports both system and task prompt generation
-- Uses the Pollinations.ai API with streaming responses
-- Allows customization of the system prompt used for generation
-
-## 🔮 Recent Improvements
-
-- Enhanced UI with improved styling and responsive design
-- AI Assistant with streaming response support
-- Prompt type categorization (system/task)
-- Customizable system prompt for AI generation
-- Improved Supabase integration with fallback mechanisms
-
-## 🚧 Future Development
-
-- Prompt version history
-- AI prompt templates
-- Shared prompt libraries
-- Additional storage backends
-- Advanced tagging with hierarchies
-- Team collaboration features
+---
+*Made with ❤️ by Pink Pixel*

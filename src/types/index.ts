@@ -1,4 +1,3 @@
-
 export interface Tag {
   id: string;
   name: string;
@@ -9,7 +8,7 @@ export interface Prompt {
   text: string;
   tags: Tag[];
   createdAt: string;
-  type?: "system" | "task"; // Optional type field
+  type?: "system" | "task" | "image" | "video"; // Optional type field
 }
 
 export interface AIResponse {
@@ -19,5 +18,5 @@ export interface AIResponse {
 }
 
 export interface AIGenerateOptions {
-  promptType: "system" | "task";
+  promptType: "system" | "task" | "image" | "video";
 }
