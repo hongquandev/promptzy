@@ -1,6 +1,6 @@
 # 🚀 AI Prompt Dashboard
 
-**Last Updated:** 2025-05-19T21:24:10Z
+**Last Updated:** 2025-05-21T00:00:51Z
 
 ## Project Overview
 
@@ -18,17 +18,21 @@ The AI Prompt Dashboard is a modern Vite-based React application for managing, o
   - Supabase (cloud persistence)  
   - Hybrid mode with automatic sync and fallback
 - **AI Assistant:** Generate new prompt ideas using the Pollinations.ai API with streaming responses
+- **Improved Styling:** Banner and icon-based send button for a modern UI
+- **Automatic API Key Configuration:** Seamless setup and management for API keys
+- **Workspace Context Aware Prompts:** Enhanced prompts leveraging current workspace context
+- **Embedding Search:** Semantic search powered by NeonDB for advanced prompt discovery
 - **User Authentication & Sync:** Supabase-powered login with local fallback
 - **Theming & Responsive Design:** Dark/light mode toggles (Next-Themes) and mobile-friendly UI
 
 ## 🛠️ Technical Stack
 
-- **Framework:** React 18.3 (TypeScript)
+- **Framework:** React 19.1 (TypeScript)
 - **Bundler & Dev Server:** Vite 5.4
 - **Styling:** Tailwind CSS + Radix UI primitives (via Shadcn UI)
 - **Component Library:** Shadcn UI & Radix primitives
 - **State Management:** React Hooks + TanStack Query
-- **Routing:** React Router v6
+- **Routing:** React Router v7
 - **Forms & Validation:** React Hook Form & Zod
 - **Data Storage:** Supabase JS SDK + localStorage sync stores
 - **Notifications:** Sonner + custom toast hook
@@ -40,8 +44,8 @@ The AI Prompt Dashboard is a modern Vite-based React application for managing, o
 
 ## ⚙️ Configuration & Tooling
 
-- **TypeScript:** v5.5
-- **Linting:** ESLint
+- **TypeScript:** v5.8
+- **Linting:** ESLint v9
 - **Styling:** PostCSS & Tailwind CSS
 - **Deployment:** Cloudflare Pages (wrangler.toml)
 - **CI/CD:** GitHub Actions workflows (.github/workflows)

@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions workflow for automated deployment
 - Comprehensive deployment guide (DEPLOYMENT.md)
 - SPA routing configuration for Cloudflare Pages with _routes.json
+- Improved bidirectional sync between local storage and Supabase
+- Better logging for troubleshooting sync issues
+- Detailed documentation on synchronization behavior in README
 
 ### Changed
 - Improved Supabase client to dynamically use user-provided credentials
@@ -33,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated table creation flow to focus on manual setup via SQL Editor
 - Prompt card list switched from CSS grid to responsive Masonry-style flex columns to isolate vertical expansion
 - Updated _routes.json to properly handle SPA routing in Cloudflare Pages
+- Enhanced storage type persistence between sessions
+- Improved authentication detection for anonymous Supabase usage
 
 ### Fixed
 - Table access error handling for Supabase environments
@@ -40,6 +45,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.btn-hover-effect` overlay no longer blocks pointer events on card controls
 - Expand/collapse toggle now only affects individual cards, not all cards
 - Cloudflare Pages SPA routing issues by adding proper "serve" configuration
+- Storage preference not persisting between page reloads
+- Supabase synchronization not working correctly between devices
+- Fixed bugs in prompt import/export between storage types
+- Improved handling of Supabase connection failures
+- User-specific data filtering to prevent mixing prompts between users
 
 ## [0.1.0] - 2025-05-19
 

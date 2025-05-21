@@ -110,15 +110,23 @@ export const getPromptsFromSupabase = async (): Promise<Prompt[]> => {
   const client = getClient();
   
   try {
+    console.log("Fetching prompts from Supabase...");
     const tableReady = await ensurePromptsTable(client);
     if (!tableReady) {
       console.error("Prompts table is not available");
       return [];
     }
 
+    // Get the current user session to get the user ID
+    const { data: sessionData } = await client.auth.getSession();
+    const userId = sessionData?.session?.user?.id || 'anonymous';
+    console.log("Current user ID:", userId);
+
+    // Filter prompts by the current user ID to ensure we only get this user's prompts
     const { data, error } = await client
       .from('prompts')
-      .select('*');
+      .select('*')
+      .eq('user_id', userId);
     
     if (error) {
       console.error("Error fetching prompts from Supabase:", error);
@@ -126,8 +134,11 @@ export const getPromptsFromSupabase = async (): Promise<Prompt[]> => {
     }
     
     if (!data || !Array.isArray(data)) {
+      console.log("No prompts found in Supabase for this user");
       return [];
     }
+    
+    console.log(`Found ${data.length} prompts in Supabase for user ${userId}`);
     
     // Transform data to match our Prompt type
     return data.map((item: PromptsTable) => ({
@@ -150,6 +161,7 @@ export const savePromptToSupabase = async (prompt: Prompt): Promise<boolean> => 
   const client = getClient();
   
   try {
+    console.log("Saving prompt to Supabase:", prompt.id);
     const tableReady = await ensurePromptsTable(client);
     if (!tableReady) {
       console.error("Prompts table is not available");
@@ -159,29 +171,36 @@ export const savePromptToSupabase = async (prompt: Prompt): Promise<boolean> => 
     // Get the current user session to get the user ID
     const { data: sessionData } = await client.auth.getSession();
     const userId = sessionData?.session?.user?.id || 'anonymous';
+    console.log("Current user ID for saving:", userId);
+
+    // Create the prompt object to save
+    const promptToSave = {
+      id: prompt.id,
+      content: prompt.text, // Map text to content
+      tags: prompt.tags.map(tag => tag.name), // Convert Tag objects to string names
+      createdat: prompt.createdAt,
+      title: prompt.text.substring(0, 50), // Use first 50 chars of text as title
+      category: prompt.type || 'task',
+      description: '',
+      user_id: userId,
+      ispublic: false,
+      likes: 0,
+      views: 0,
+      comments: 0
+    };
+
+    console.log("Saving prompt data:", promptToSave);
 
     const { error } = await client
       .from('prompts')
-      .upsert({
-        id: prompt.id,
-        content: prompt.text, // Map text to content
-        tags: prompt.tags.map(tag => tag.name), // Convert Tag objects to string names
-        createdat: prompt.createdAt,
-        title: prompt.text.substring(0, 50), // Use first 50 chars of text as title
-        category: prompt.type || 'task',
-        description: '',
-        user_id: userId,
-        ispublic: false,
-        likes: 0,
-        views: 0,
-        comments: 0
-      });
+      .upsert(promptToSave, { onConflict: 'id' });
     
     if (error) {
       console.error("Error saving prompt to Supabase:", error);
       return false;
     }
     
+    console.log("Successfully saved prompt to Supabase:", prompt.id);
     return true;
   } catch (err) {
     console.error("Exception while saving prompt:", err);
@@ -217,9 +236,20 @@ export const deletePromptFromSupabase = async (id: string): Promise<boolean> => 
 };
 
 export const syncPromptsToSupabase = async (localPrompts: Prompt[]): Promise<void> => {
+  console.log(`Syncing ${localPrompts.length} local prompts to Supabase...`);
+  let successCount = 0;
+  let failCount = 0;
+  
   for (const prompt of localPrompts) {
-    await savePromptToSupabase(prompt);
+    const success = await savePromptToSupabase(prompt);
+    if (success) {
+      successCount++;
+    } else {
+      failCount++;
+    }
   }
+  
+  console.log(`Sync complete: ${successCount} prompts synced successfully, ${failCount} failed`);
 };
 
 // Helper function to check connection
@@ -228,17 +258,32 @@ export const testSupabaseConnection = async (): Promise<boolean> => {
   const client = getClient();
   
   try {
-    // Attempt to get the current session as a connection test
-    const { data, error } = await client.auth.getSession();
+    console.log("Testing Supabase connection...");
     
-    if (error) {
-      console.error("Supabase connection test failed:", error);
+    // First, test the basic API connection with a simple query
+    const { data: healthData, error: healthError } = await client
+      .from('prompts')
+      .select('id')
+      .limit(1);
+    
+    // If we get a permission error, that's actually okay - it means we connected
+    // but the table may not exist or we don't have permission
+    if (healthError && healthError.code !== '42P01' && !healthError.message.includes('permission denied')) {
+      console.error("Supabase health check failed:", healthError);
       return false;
     }
     
-    // Check if the table exists - we'll consider this a successful connection
-    // even if the table doesn't exist, as table creation will need to be manual
+    // Attempt to get the current session as a secondary connection test
+    const { data, error } = await client.auth.getSession();
+    
+    if (error) {
+      console.warn("Supabase auth session check warning:", error);
+      // Don't fail just because of auth - the app can work in anonymous mode
+    }
+    
+    // Check if the prompts table exists
     const tableExists = await checkTableExists(client);
+    console.log("Supabase connection successful, table exists:", tableExists);
     
     return true;
   } catch (err) {

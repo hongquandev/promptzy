@@ -102,6 +102,22 @@ To use cloud storage features:
 
 The application will now use your Supabase instance for cloud storage!
 
+#### Synchronization Details
+
+When using the "Both" storage option:
+
+- New prompts are saved to both local storage and Supabase
+- When you open the application, it will:
+  1. Load local prompts first
+  2. Fetch prompts from Supabase
+  3. Merge them, preferring Supabase versions for duplicate IDs
+  4. Sync any unique local prompts to Supabase
+  5. Save any unique Supabase prompts to local storage
+
+This bidirectional sync ensures your prompts are available across devices and you always have a local backup.
+
+> **Note:** Cloud sync requires opening the application with the same Supabase configuration on all devices. Your storage preference is saved in your browser's localStorage.
+
 ## 📖 Usage
 
 1. Launch the application

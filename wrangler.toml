@@ -1,14 +1,20 @@
 # Configuration for Cloudflare Pages
 name = "ai-prompt-dashboard"
 
-# Build configuration
-[build]
-command = "npm run build"
-output_directory = "dist"
+# The directory to deploy
+pages_build_output_dir = "dist"
+
+# Routes and other configurations
+compatibility_date = "2023-10-30"
 
 # Environment variables
-[env.production]
+[vars]
 NODE_ENV = "production"
 
-[env.preview]
+# Production-specific environment variables
+[env.production.vars]
+NODE_ENV = "production"
+
+# Preview-specific environment variables
+[env.preview.vars]
 NODE_ENV = "production"

@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { testSupabaseConnection, checkTableExists, CREATE_TABLE_SQL } from "@/lib/supabasePromptStore";
 import { saveSystemPrompt, useDefaultPrompt, isUsingDefaultPrompt } from "@/lib/systemPromptStore";
 import { SYSTEM_PROMPT_DEFAULT } from "@/components/AIAssistant";
-import { createSupabaseClient } from "@/integrations/supabase/client";
+import { createSupabaseClient, getSupabaseCredentials } from "@/integrations/supabase/client";
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -26,12 +26,14 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   storageType,
   onStorageTypeChange
 }) => {
+  // Pre-load default Supabase credentials to allow saving settings without re-entry
+  const { supabaseUrl: defaultSupabaseUrl, supabaseKey: defaultSupabaseKey } = getSupabaseCredentials();
   const [selectedStorage, setSelectedStorage] = useState<"local" | "supabase" | "both">(storageType);
   const [supabaseUrl, setSupabaseUrl] = useState<string>(() => {
-    return localStorage.getItem('custom-supabase-url') || "";
+    return localStorage.getItem('custom-supabase-url') || defaultSupabaseUrl;
   });
   const [supabaseKey, setSupabaseKey] = useState<string>(() => {
-    return localStorage.getItem('custom-supabase-key') || "";
+    return localStorage.getItem('custom-supabase-key') || defaultSupabaseKey;
   });
   const [isConnectionTesting, setIsConnectionTesting] = useState<boolean>(false);
   const [connectionStatus, setConnectionStatus] = useState<"untested" | "success" | "failed">("untested");
@@ -194,7 +196,14 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
       saveSystemPrompt(customSystemPrompt);
     }
     
+    // Save the storage type directly to localStorage in addition to the state change
+    // This ensures it persists immediately even if there's an issue with the effect in Index.tsx
+    localStorage.setItem('ai-prompts-storage-type', JSON.stringify(selectedStorage));
+    console.log("Saved storage type in settings dialog:", selectedStorage);
+    
+    // Call the parent component's handler to update the state
     onStorageTypeChange(selectedStorage);
+    
     toast({
       title: "Settings Saved",
       description: `Your settings have been updated.`
