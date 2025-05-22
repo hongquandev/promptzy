@@ -58,7 +58,8 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
 
     // Make sure we have a valid prompt object with all required fields
     const promptData: Prompt = {
-      id: editingPrompt?.id && editingPrompt.id !== "" ? editingPrompt.id : Date.now().toString(),
+      // Generate a UUID for new prompts to satisfy Supabase UUID requirements
+      id: editingPrompt?.id && editingPrompt.id !== "" ? editingPrompt.id : crypto.randomUUID(),
       text: text.trim(),
       tags: tags || [], // Ensure tags is an array (even if empty)
       type: type,

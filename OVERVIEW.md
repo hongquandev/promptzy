@@ -1,6 +1,6 @@
 # 🚀 AI Prompt Dashboard
 
-**Last Updated:** 2025-05-21T00:00:51Z
+**Last Updated:** 2025-05-22T00:18:56.371Z
 
 ## Project Overview
 
@@ -14,8 +14,8 @@ The AI Prompt Dashboard is a modern Vite-based React application for managing, o
 - **Search & Filter:** Full-text search and tag-based filtering
 - **Command Palette:** Quickly navigate and execute actions via keyboard (powered by cmdk)
 - **Dual Storage Options:**
-  - LocalStorage (offline-first)  
-  - Supabase (cloud persistence)  
+  - LocalStorage (offline-first)
+  - Supabase (cloud persistence)
   - Hybrid mode with automatic sync and fallback
 - **AI Assistant:** Generate new prompt ideas using the Pollinations.ai API with streaming responses
 - **Improved Styling:** Banner and icon-based send button for a modern UI
@@ -24,6 +24,7 @@ The AI Prompt Dashboard is a modern Vite-based React application for managing, o
 - **Embedding Search:** Semantic search powered by NeonDB for advanced prompt discovery
 - **User Authentication & Sync:** Supabase-powered login with local fallback
 - **Theming & Responsive Design:** Dark/light mode toggles (Next-Themes) and mobile-friendly UI
+- **Cloudflare Pages Deployment:** Configured for easy deployment with proper SPA routing
 
 ## 🛠️ Technical Stack
 
@@ -48,6 +49,7 @@ The AI Prompt Dashboard is a modern Vite-based React application for managing, o
 - **Linting:** ESLint v9
 - **Styling:** PostCSS & Tailwind CSS
 - **Deployment:** Cloudflare Pages (wrangler.toml)
+- **SPA Routing:** _routes.json for Cloudflare Pages
 - **CI/CD:** GitHub Actions workflows (.github/workflows)
 
 ## 📁 Project Structure
@@ -55,6 +57,7 @@ The AI Prompt Dashboard is a modern Vite-based React application for managing, o
 ```
 prompt-dashboard/
 ├── public/                 # Static assets
+│   └── _routes.json        # SPA routing configuration for Cloudflare Pages
 ├── src/                    # Source code
 │   ├── components/         # UI components
 │   │   ├── AIAssistant.tsx
@@ -73,6 +76,8 @@ prompt-dashboard/
 │   ├── lib/                # Business logic & stores (promptStore, supabasePromptStore, systemPromptStore)
 │   ├── pages/              # Route pages (Index, NotFound)
 │   └── types/              # TypeScript definitions
+├── dist/                   # Build output directory
+│   └── _routes.json        # Generated SPA routing configuration
 ├── .github/                # CI/CD workflows
 ├── wrangler.toml           # Cloudflare Pages config
 ├── tailwind.config.ts      # Tailwind config
@@ -92,6 +97,15 @@ prompt-dashboard/
    npm run dev | yarn dev | bun run dev
    ```
 4. Open the app at http://localhost:8080
+
+## 🌐 Deployment
+
+The project is configured for deployment to Cloudflare Pages using Wrangler. The key configuration files are:
+
+- **wrangler.toml**: Defines the project name, build output directory, and environment variables
+- **_routes.json**: Handles SPA routing by serving index.html for all non-asset routes
+
+For detailed deployment instructions, see the [DEPLOYMENT.md](DEPLOYMENT.md) guide.
 
 ## 🔮 Future Enhancements
 

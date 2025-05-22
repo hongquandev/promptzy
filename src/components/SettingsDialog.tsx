@@ -4,14 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea"; 
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Settings, Database, CheckCircle, AlertCircle, Sparkles, RefreshCw, Code, Database as DatabaseIcon, Copy, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { testSupabaseConnection, checkTableExists, CREATE_TABLE_SQL } from "@/lib/supabasePromptStore";
+import { testSupabaseConnection, checkTableExists, CREATE_TABLE_SQL, getSupabaseDiagnostics } from "@/lib/supabasePromptStore";
 import { saveSystemPrompt, useDefaultPrompt, isUsingDefaultPrompt } from "@/lib/systemPromptStore";
 import { SYSTEM_PROMPT_DEFAULT } from "@/components/AIAssistant";
-import { createSupabaseClient, getSupabaseCredentials } from "@/integrations/supabase/client";
+import {
+  createSupabaseClient,
+  getSupabaseCredentials,
+  saveSupabaseCredentials,
+  clearSupabaseCredentials,
+  SUPABASE_URL_KEY,
+  SUPABASE_KEY_KEY
+} from "@/integrations/supabase/client";
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -39,6 +46,9 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   const [connectionStatus, setConnectionStatus] = useState<"untested" | "success" | "failed">("untested");
   const [tableStatus, setTableStatus] = useState<"exists" | "missing" | "unknown">("unknown");
   const [showSqlSetup, setShowSqlSetup] = useState<boolean>(false);
+  const [showDiagnostics, setShowDiagnostics] = useState<boolean>(false);
+  const [diagnosticsData, setDiagnosticsData] = useState<any>(null);
+  const [isDiagnosing, setIsDiagnosing] = useState<boolean>(false);
   const [customSystemPrompt, setCustomSystemPrompt] = useState<string>(() => {
     return localStorage.getItem('ai-system-prompt') || SYSTEM_PROMPT_DEFAULT;
   });
@@ -70,55 +80,149 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
       return;
     }
 
-    setIsConnectionTesting(true);
-    setConnectionStatus("untested");
-    setTableStatus("unknown");
-    setShowSqlSetup(false);
-
-    // Temporarily store the credentials to test the connection
-    localStorage.setItem('custom-supabase-url', supabaseUrl);
-    localStorage.setItem('custom-supabase-key', supabaseKey);
-
-    // Test basic connection
-    const isConnected = await testSupabaseConnection();
-    
-    if (!isConnected) {
-      setIsConnectionTesting(false);
-      setConnectionStatus("failed");
+    // Basic validation before even trying to connect
+    if (!supabaseUrl.startsWith('https://') || !supabaseUrl.includes('.supabase.co')) {
       toast({
-        title: "Connection Failed",
-        description: "Could not connect to Supabase. Please check your credentials and try again.",
+        title: "Invalid URL Format",
+        description: "Supabase URL should be in the format: https://your-project.supabase.co",
         variant: "destructive"
       });
       return;
     }
 
-    // Check if table exists
-    const client = createSupabaseClient();
-    const tableExists = await checkTableExists(client);
-
-    if (tableExists) {
-      setTableStatus("exists");
-      setConnectionStatus("success");
-      setIsConnectionTesting(false);
+    if (supabaseKey.length < 20) {
       toast({
-        title: "Connection Successful",
-        description: "Successfully connected to your Supabase instance with table access.",
+        title: "Invalid Key Format",
+        description: "The Supabase key appears to be too short. Please check your anon key.",
+        variant: "destructive"
       });
       return;
     }
 
-    // Table doesn't exist, show SQL setup guidance
-    setTableStatus("missing");
-    setConnectionStatus("failed");
-    setShowSqlSetup(true);
-    toast({
-      title: "Table Setup Required",
-      description: "Connected to Supabase, but the prompts table doesn't exist. Please create it manually.",
-      variant: "destructive"
-    });
-    
-    setIsConnectionTesting(false);
+    setIsConnectionTesting(true);
+    setConnectionStatus("untested");
+    setTableStatus("unknown");
+    setShowSqlSetup(false);
+
+    // Save the credentials using our helper function
+    const savedSuccessfully = saveSupabaseCredentials(supabaseUrl, supabaseKey);
+
+    if (!savedSuccessfully) {
+      toast({
+        title: "Storage Error",
+        description: "Could not save credentials to browser storage. Please check your browser settings.",
+        variant: "destructive"
+      });
+      setIsConnectionTesting(false);
+      return;
+    }
+
+    // Test basic connection with a timeout
+    try {
+      // Set a timeout for the connection test
+      const connectionPromise = testSupabaseConnection();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Connection timeout after 10 seconds")), 10000)
+      );
+
+      // Race the connection test against the timeout
+      const isConnected = await Promise.race([
+        connectionPromise,
+        timeoutPromise.then(() => {
+          toast({
+            title: "Connection Timeout",
+            description: "The connection to Supabase timed out. Please check your URL and internet connection.",
+            variant: "destructive"
+          });
+          return false;
+        })
+      ]);
+
+      if (!isConnected) {
+        setIsConnectionTesting(false);
+        setConnectionStatus("failed");
+        toast({
+          title: "Connection Failed",
+          description: "Could not connect to Supabase. Please check your credentials and try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Check if table exists
+      const client = createSupabaseClient();
+      const tableExists = await checkTableExists(client);
+
+      if (tableExists) {
+        setTableStatus("exists");
+        setConnectionStatus("success");
+        setIsConnectionTesting(false);
+        toast({
+          title: "Connection Successful",
+          description: "Successfully connected to your Supabase instance with table access.",
+        });
+        return;
+      }
+
+      // Table doesn't exist, show SQL setup guidance
+      setTableStatus("missing");
+      setConnectionStatus("failed");
+      setShowSqlSetup(true);
+      toast({
+        title: "Table Setup Required",
+        description: "Connected to Supabase, but the prompts table doesn't exist. Please create it manually.",
+        variant: "destructive"
+      });
+    } catch (error) {
+      console.error("Error during connection test:", error);
+      setConnectionStatus("failed");
+      toast({
+        title: "Connection Error",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsConnectionTesting(false);
+    }
+  };
+
+  const handleDiagnoseConnection = async () => {
+    if (!supabaseUrl || !supabaseKey) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both Supabase URL and API Key",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsDiagnosing(true);
+    setShowDiagnostics(true);
+
+    try {
+      // Save the credentials temporarily for testing
+      saveSupabaseCredentials(supabaseUrl, supabaseKey);
+
+      // Run diagnostics
+      const diagnostics = await getSupabaseDiagnostics();
+      setDiagnosticsData(diagnostics);
+
+      console.log("Supabase connection diagnostics:", diagnostics);
+
+      toast({
+        title: "Diagnostics Complete",
+        description: "Connection diagnostics have been collected.",
+      });
+    } catch (error) {
+      console.error("Error running diagnostics:", error);
+      toast({
+        title: "Diagnostics Failed",
+        description: "Could not complete diagnostics. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDiagnosing(false);
+    }
   };
 
   const handleCopySql = () => {
@@ -142,52 +246,88 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   };
 
   const handleSave = async () => {
-    // Check if custom Supabase config is provided
+    // Immediately save the storage type selection to localStorage
+    localStorage.setItem('ai-prompts-storage-type', JSON.stringify(selectedStorage));
+    console.log("Saved storage type in settings dialog:", selectedStorage);
+
+    // If switching to local only, clear Supabase credentials if requested
+    if (selectedStorage === "local" && (storageType === "supabase" || storageType === "both")) {
+      // We could offer to clear credentials here, but for now we'll keep them
+      // in case the user wants to switch back
+      console.log("Switching to local storage only, but keeping Supabase credentials");
+    }
+
+    // Check if custom Supabase config is provided when needed
     if ((selectedStorage === "supabase" || selectedStorage === "both")) {
       if (supabaseUrl && supabaseKey) {
-        // Save custom Supabase config to local storage
-        localStorage.setItem('custom-supabase-url', supabaseUrl);
-        localStorage.setItem('custom-supabase-key', supabaseKey);
-        
-        // Test the connection before saving
-        const isConnected = await testSupabaseConnection();
-        if (!isConnected) {
+        // Basic validation before saving
+        if (!supabaseUrl.startsWith('https://') || !supabaseUrl.includes('.supabase.co')) {
           toast({
-            title: "Supabase Connection Failed",
-            description: "Could not connect to Supabase with the provided credentials. Please check your settings.",
+            title: "Invalid URL Format",
+            description: "Supabase URL should be in the format: https://your-project.supabase.co",
             variant: "destructive"
           });
           return;
         }
 
-        // Check if table exists
+        if (supabaseKey.length < 20) {
+          toast({
+            title: "Invalid Key Format",
+            description: "The Supabase key appears to be too short. Please check your anon key.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // Save Supabase credentials using our helper function
+        const savedSuccessfully = saveSupabaseCredentials(supabaseUrl, supabaseKey);
+
+        if (!savedSuccessfully) {
+          toast({
+            title: "Storage Error",
+            description: "Could not save credentials to browser storage. Please check your browser settings.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // Test the connection before finalizing
+        setIsConnectionTesting(true);
+        const isConnected = await testSupabaseConnection();
+        setIsConnectionTesting(false);
+
+        if (!isConnected) {
+          toast({
+            title: "Supabase Connection Failed",
+            description: "Could not connect to Supabase with the provided credentials. Your settings have been saved, but you may need to fix your connection details.",
+            variant: "destructive"
+          });
+          // Still proceed with saving, but warn the user
+        }
+
+        // Check if table exists - but don't block saving if it doesn't
         const client = createSupabaseClient();
         const tableExists = await checkTableExists(client);
-        
+
         if (!tableExists) {
           toast({
             title: "Supabase Table Required",
-            description: "Please create the prompts table in your Supabase instance before saving.",
+            description: "Your Supabase connection works, but the prompts table doesn't exist. Please create it for full functionality.",
             variant: "destructive"
           });
           setShowSqlSetup(true);
-          return;
+          // Still proceed with saving
         }
-        
-        toast({
-          title: "Settings Saved",
-          description: "Custom Supabase configuration has been saved."
-        });
       } else {
         toast({
           title: "Supabase Configuration Required",
-          description: "Please enter your Supabase URL and API Key or choose Local Storage only.",
+          description: "Please enter your Supabase URL and API Key for cloud storage.",
           variant: "destructive"
         });
-        return;
+        // Don't return - allow saving other settings even if Supabase config is incomplete
       }
     }
-    
+
     // Save system prompt settings
     if (useDefaultSystemPrompt) {
       useDefaultPrompt(true);
@@ -195,25 +335,20 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
       useDefaultPrompt(false);
       saveSystemPrompt(customSystemPrompt);
     }
-    
-    // Save the storage type directly to localStorage in addition to the state change
-    // This ensures it persists immediately even if there's an issue with the effect in Index.tsx
-    localStorage.setItem('ai-prompts-storage-type', JSON.stringify(selectedStorage));
-    console.log("Saved storage type in settings dialog:", selectedStorage);
-    
+
     // Call the parent component's handler to update the state
     onStorageTypeChange(selectedStorage);
-    
+
     toast({
       title: "Settings Saved",
-      description: `Your settings have been updated.`
+      description: `Your settings have been updated. Storage type: ${selectedStorage}`
     });
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-3xl w-[90vw]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
@@ -223,13 +358,13 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
             Configure how you want to store and access your prompts.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="py-4">
           <div className="space-y-6">
             <div>
               <h3 className="text-sm font-medium mb-3">Storage Options</h3>
-              <RadioGroup 
-                value={selectedStorage} 
+              <RadioGroup
+                value={selectedStorage}
                 onValueChange={(value) => setSelectedStorage(value as "local" | "supabase" | "both")}
               >
                 <div className="flex items-start space-x-2 mb-3">
@@ -242,9 +377,9 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   </div>
                 </div>
                 <div className="flex items-start space-x-2 mb-3">
-                  <RadioGroupItem 
-                    value="supabase" 
-                    id="supabase" 
+                  <RadioGroupItem
+                    value="supabase"
+                    id="supabase"
                   />
                   <div className="grid gap-1.5">
                     <Label htmlFor="supabase" className="font-medium">
@@ -256,9 +391,9 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   </div>
                 </div>
                 <div className="flex items-start space-x-2">
-                  <RadioGroupItem 
-                    value="both" 
-                    id="both" 
+                  <RadioGroupItem
+                    value="both"
+                    id="both"
                   />
                   <div className="grid gap-1.5">
                     <Label htmlFor="both" className="font-medium">
@@ -281,7 +416,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                 <p className="text-xs text-muted-foreground">
                   Enter your Supabase project URL and anon key to connect to your own Supabase instance
                 </p>
-                
+
                 <div className="space-y-2">
                   <div className="space-y-1">
                     <Label htmlFor="supabase-url">Supabase Project URL</Label>
@@ -303,24 +438,79 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     />
                   </div>
                 </div>
-                
+
                 <div className="flex justify-between items-center">
-                  <Button
-                    variant="outline"
-                    onClick={handleTestConnection}
-                    disabled={isConnectionTesting || !supabaseUrl || !supabaseKey}
-                    className="flex gap-2 items-center"
-                  >
-                    {isConnectionTesting ? "Testing..." : "Test Connection"}
-                  </Button>
-                  
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={handleTestConnection}
+                      disabled={isConnectionTesting || !supabaseUrl || !supabaseKey}
+                      className="flex gap-2 items-center"
+                    >
+                      {isConnectionTesting ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          Testing...
+                        </>
+                      ) : (
+                        <>
+                          <DatabaseIcon className="h-4 w-4" />
+                          Test Connection
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        // Clear credentials and reset form
+                        clearSupabaseCredentials();
+                        setSupabaseUrl("");
+                        setSupabaseKey("");
+                        setConnectionStatus("untested");
+                        setTableStatus("unknown");
+                        setShowSqlSetup(false);
+                        setShowDiagnostics(false);
+                        toast({
+                          title: "Connection Reset",
+                          description: "Supabase credentials have been cleared. You can now enter new credentials."
+                        });
+                      }}
+                      className="flex gap-2 items-center"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Reset
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleDiagnoseConnection}
+                      disabled={isDiagnosing || !supabaseUrl || !supabaseKey}
+                      className="flex gap-2 items-center"
+                    >
+                      {isDiagnosing ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          Diagnosing...
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="h-4 w-4" />
+                          Diagnose
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
                   {connectionStatus === "success" && (
                     <div className="flex items-center text-sm text-green-600 gap-1">
                       <CheckCircle className="h-4 w-4" />
                       <span>Connected</span>
                     </div>
                   )}
-                  
+
                   {connectionStatus === "failed" && (
                     <div className="flex items-center text-sm text-red-600 gap-1">
                       <AlertCircle className="h-4 w-4" />
@@ -328,6 +518,76 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     </div>
                   )}
                 </div>
+
+                {showDiagnostics && diagnosticsData && (
+                  <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md">
+                    <div className="flex items-start gap-2 mb-2">
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium mb-2">Connection Diagnostics</h4>
+                        <div className="text-xs space-y-1">
+                          <div className="grid grid-cols-2 gap-1">
+                            <span className="text-muted-foreground">Network Connectivity:</span>
+                            <span className={diagnosticsData.networkConnectivity ? "text-green-600" : "text-red-600"}>
+                              {diagnosticsData.networkConnectivity ? "OK" : "Failed"}
+                            </span>
+
+                            <span className="text-muted-foreground">CORS Issues:</span>
+                            <span className={!diagnosticsData.corsIssue ? "text-green-600" : "text-red-600"}>
+                              {!diagnosticsData.corsIssue ? "None" : "Detected"}
+                            </span>
+
+                            <span className="text-muted-foreground">Auth Connection:</span>
+                            <span className={diagnosticsData.authConnection ? "text-green-600" : "text-red-600"}>
+                              {diagnosticsData.authConnection ? "OK" : "Failed"}
+                            </span>
+
+                            <span className="text-muted-foreground">Data Connection:</span>
+                            <span className={diagnosticsData.dataConnection ? "text-green-600" : "text-red-600"}>
+                              {diagnosticsData.dataConnection ? "OK" : "Failed"}
+                            </span>
+
+                            <span className="text-muted-foreground">Table Exists:</span>
+                            <span className={diagnosticsData.tableExists ? "text-green-600" : "text-amber-600"}>
+                              {diagnosticsData.tableExists ? "Yes" : "No"}
+                            </span>
+                          </div>
+
+                          {diagnosticsData.error && (
+                            <div className="mt-2 text-red-600">
+                              <span className="font-medium">Error:</span> {diagnosticsData.error}
+                            </div>
+                          )}
+
+                          <div className="mt-2">
+                            <span className="font-medium">Recommendation:</span>{" "}
+                            {diagnosticsData.corsIssue ? (
+                              <span>Check your browser's CORS settings or try a different browser.</span>
+                            ) : !diagnosticsData.networkConnectivity ? (
+                              <span>Check your internet connection.</span>
+                            ) : !diagnosticsData.authConnection ? (
+                              <span>Verify your Supabase URL and API key.</span>
+                            ) : !diagnosticsData.dataConnection ? (
+                              <span>Verify your database permissions.</span>
+                            ) : !diagnosticsData.tableExists ? (
+                              <span>Create the prompts table using the SQL below.</span>
+                            ) : (
+                              <span>Your connection appears to be working correctly.</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-2 text-xs"
+                      onClick={() => setShowDiagnostics(false)}
+                    >
+                      Hide Diagnostics
+                    </Button>
+                  </div>
+                )}
 
                 {showSqlSetup && (
                   <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md">
@@ -340,34 +600,34 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="relative mt-2">
                       <pre className="text-xs p-2 bg-gray-800 text-gray-100 rounded-md overflow-x-auto">{CREATE_TABLE_SQL.trim()}</pre>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="absolute top-1 right-1 h-6 w-6 p-0"
                         onClick={handleCopySql}
                       >
                         <Copy className="h-3 w-3" />
                       </Button>
                     </div>
-                    
+
                     <div className="mt-3 flex flex-col gap-2">
                       <p className="text-xs text-amber-700 dark:text-amber-400">
                         Steps to create the table:
                       </p>
                       <ol className="text-xs text-amber-700 dark:text-amber-400 list-decimal pl-4 space-y-1">
                         <li>Go to your Supabase dashboard</li>
-                        <li>Select your project</li> 
+                        <li>Select your project</li>
                         <li>Navigate to SQL Editor</li>
                         <li>Create a new query</li>
                         <li>Paste the SQL code above</li>
                         <li>Click "Run" to execute</li>
                       </ol>
-                      
-                      <Button 
-                        variant="outline" 
+
+                      <Button
+                        variant="outline"
                         size="sm"
                         className="mt-2 h-8 text-xs flex items-center gap-1 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-900 hover:bg-amber-200 dark:hover:bg-amber-800 w-full justify-center"
                         onClick={openSupabaseSqlEditor}
@@ -378,7 +638,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     </div>
                   </div>
                 )}
-                
+
                 <div className="text-xs text-muted-foreground">
                   <p className="mb-2">To find your Supabase details:</p>
                   <ol className="list-decimal pl-4 space-y-1">
@@ -400,8 +660,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               </p>
 
               <div className="flex items-center space-x-2 mb-2">
-                <Checkbox 
-                  id="use-default-prompt" 
+                <Checkbox
+                  id="use-default-prompt"
                   checked={useDefaultSystemPrompt}
                   onCheckedChange={(checked) => {
                     setUseDefaultSystemPrompt(checked as boolean);
@@ -417,7 +677,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   <Label htmlFor="system-prompt" className="text-sm">
                     System Prompt
                   </Label>
-                  <Button 
+                  <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleResetSystemPrompt}
@@ -442,7 +702,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
             </div>
           </div>
         </div>
-        
+
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancel

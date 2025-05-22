@@ -38,20 +38,19 @@ const Index = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
   const [storageType, setStorageType] = useState<"local" | "supabase" | "both">(() => {
-    const saved = localStorage.getItem(STORAGE_TYPE_KEY);
-    // Be more explicit about type conversion to avoid potential errors
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // Validate that the parsed value is one of the expected types
+    try {
+      const savedType = localStorage.getItem(STORAGE_TYPE_KEY);
+      console.log("Loading initial storage type from localStorage:", savedType);
+      if (savedType) {
+        const parsed = JSON.parse(savedType);
         if (parsed === "local" || parsed === "supabase" || parsed === "both") {
           return parsed;
         }
-      } catch (e) {
-        console.error("Error parsing storage type from localStorage:", e);
       }
+    } catch (error) {
+      console.error("Error parsing storage type from localStorage:", error);
     }
-    return "local"; // Default to local storage if nothing valid is found
+    return "local"; // Default fallback
   });
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [supabaseConnected, setSupabaseConnected] = useState<boolean>(false);
@@ -184,7 +183,7 @@ const Index = () => {
     loadPrompts();
   }, [storageType, supabaseConnected, toast]);
 
-  // Save storage type preference - ensure it's always called when storageType changes
+  // Explicitly save to localStorage whenever storageType changes
   useEffect(() => {
     console.log("Saving storage type preference:", storageType);
     localStorage.setItem(STORAGE_TYPE_KEY, JSON.stringify(storageType));
@@ -213,6 +212,24 @@ const Index = () => {
             variant: "destructive",
           });
           return;
+        }
+        
+        // If connection was successful and changing to 'both' or 'supabase',
+        // offer to sync existing local prompts to Supabase
+        if (type === "both" || type === "supabase") {
+          const localPrompts = getPrompts();
+          if (localPrompts.length > 0) {
+            // Sync local prompts to Supabase
+            toast({
+              title: "Syncing Prompts",
+              description: `Syncing ${localPrompts.length} prompts to Supabase...`,
+            });
+            await syncPromptsToSupabase(localPrompts);
+            toast({
+              title: "Sync Complete",
+              description: `${localPrompts.length} prompts synced to Supabase.`,
+            });
+          }
         }
       } catch (error) {
         console.error("Error testing Supabase connection:", error);
