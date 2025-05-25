@@ -348,7 +348,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-3xl w-[90vw]">
+      <DialogContent className="sm:max-w-6xl w-[95vw] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
@@ -360,89 +360,91 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
         </DialogHeader>
 
         <div className="py-4">
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-sm font-medium mb-3">Storage Options</h3>
-              <RadioGroup
-                value={selectedStorage}
-                onValueChange={(value) => setSelectedStorage(value as "local" | "supabase" | "both")}
-              >
-                <div className="flex items-start space-x-2 mb-3">
-                  <RadioGroupItem value="local" id="local" />
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="local" className="font-medium">Local Storage Only</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Store prompts in your browser. They won't be available on other devices.
-                    </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column - Storage Configuration */}
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-sm font-medium mb-3">Storage Options</h3>
+                <RadioGroup
+                  value={selectedStorage}
+                  onValueChange={(value) => setSelectedStorage(value as "local" | "supabase" | "both")}
+                >
+                  <div className="flex items-start space-x-2 mb-3">
+                    <RadioGroupItem value="local" id="local" />
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="local" className="font-medium">Local Storage Only</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Store prompts in your browser. They won't be available on other devices.
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start space-x-2 mb-3">
-                  <RadioGroupItem
-                    value="supabase"
-                    id="supabase"
-                  />
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="supabase" className="font-medium">
-                      Supabase Only
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Store prompts in the cloud. Access from any device.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <RadioGroupItem
-                    value="both"
-                    id="both"
-                  />
-                  <div className="grid gap-1.5">
-                    <Label htmlFor="both" className="font-medium">
-                      Both (Synchronized)
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Store prompts locally and in the cloud. Best for offline access with sync.
-                    </p>
-                  </div>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {(selectedStorage === "supabase" || selectedStorage === "both") && (
-              <div className="space-y-4 border border-border p-4 rounded-md">
-                <div className="flex items-center gap-2">
-                  <DatabaseIcon className="h-4 w-4 text-blue-500" />
-                  <h3 className="text-sm font-medium">Supabase Configuration</h3>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Enter your Supabase project URL and anon key to connect to your own Supabase instance
-                </p>
-
-                <div className="space-y-2">
-                  <div className="space-y-1">
-                    <Label htmlFor="supabase-url">Supabase Project URL</Label>
-                    <Input
-                      id="supabase-url"
-                      placeholder="https://your-project.supabase.co"
-                      value={supabaseUrl}
-                      onChange={(e) => setSupabaseUrl(e.target.value)}
+                  <div className="flex items-start space-x-2 mb-3">
+                    <RadioGroupItem
+                      value="supabase"
+                      id="supabase"
                     />
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="supabase" className="font-medium">
+                        Supabase Only
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Store prompts in the cloud. Access from any device.
+                      </p>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="supabase-key">Supabase Anon Key</Label>
-                    <Input
-                      id="supabase-key"
-                      type="password"
-                      placeholder="your-anon-key"
-                      value={supabaseKey}
-                      onChange={(e) => setSupabaseKey(e.target.value)}
+                  <div className="flex items-start space-x-2">
+                    <RadioGroupItem
+                      value="both"
+                      id="both"
                     />
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="both" className="font-medium">
+                        Both (Synchronized)
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Store prompts locally and in the cloud. Best for offline access with sync.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                </RadioGroup>
+              </div>
 
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-2">
+              {(selectedStorage === "supabase" || selectedStorage === "both") && (
+                <div className="space-y-4 border border-border p-4 rounded-md">
+                  <div className="flex items-center gap-2">
+                    <DatabaseIcon className="h-4 w-4 text-blue-500" />
+                    <h3 className="text-sm font-medium">Supabase Configuration</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Enter your Supabase project URL and anon key to connect to your own Supabase instance
+                  </p>
+
+                  <div className="space-y-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="supabase-url">Supabase Project URL</Label>
+                      <Input
+                        id="supabase-url"
+                        placeholder="https://your-project.supabase.co"
+                        value={supabaseUrl}
+                        onChange={(e) => setSupabaseUrl(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="supabase-key">Supabase Anon Key</Label>
+                      <Input
+                        id="supabase-key"
+                        type="password"
+                        placeholder="your-anon-key"
+                        value={supabaseKey}
+                        onChange={(e) => setSupabaseKey(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 items-center">
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={handleTestConnection}
                       disabled={isConnectionTesting || !supabaseUrl || !supabaseKey}
                       className="flex gap-2 items-center"
@@ -455,7 +457,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                       ) : (
                         <>
                           <DatabaseIcon className="h-4 w-4" />
-                          Test Connection
+                          Test
                         </>
                       )}
                     </Button>
@@ -463,6 +465,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     <Button
                       type="button"
                       variant="outline"
+                      size="sm"
                       onClick={() => {
                         // Clear credentials and reset form
                         clearSupabaseCredentials();
@@ -486,6 +489,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     <Button
                       type="button"
                       variant="outline"
+                      size="sm"
                       onClick={handleDiagnoseConnection}
                       disabled={isDiagnosing || !supabaseUrl || !supabaseKey}
                       className="flex gap-2 items-center"
@@ -502,22 +506,21 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                         </>
                       )}
                     </Button>
+
+                    {connectionStatus === "success" && (
+                      <div className="flex items-center text-sm text-green-600 gap-1 ml-auto">
+                        <CheckCircle className="h-4 w-4" />
+                        <span>Connected</span>
+                      </div>
+                    )}
+
+                    {connectionStatus === "failed" && (
+                      <div className="flex items-center text-sm text-red-600 gap-1 ml-auto">
+                        <AlertCircle className="h-4 w-4" />
+                        <span>Failed</span>
+                      </div>
+                    )}
                   </div>
-
-                  {connectionStatus === "success" && (
-                    <div className="flex items-center text-sm text-green-600 gap-1">
-                      <CheckCircle className="h-4 w-4" />
-                      <span>Connected</span>
-                    </div>
-                  )}
-
-                  {connectionStatus === "failed" && (
-                    <div className="flex items-center text-sm text-red-600 gap-1">
-                      <AlertCircle className="h-4 w-4" />
-                      <span>Failed</span>
-                    </div>
-                  )}
-                </div>
 
                 {showDiagnostics && diagnosticsData && (
                   <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md">
@@ -639,65 +642,69 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   </div>
                 )}
 
-                <div className="text-xs text-muted-foreground">
-                  <p className="mb-2">To find your Supabase details:</p>
-                  <ol className="list-decimal pl-4 space-y-1">
-                    <li>Go to your Supabase project dashboard</li>
-                    <li>Navigate to Project Settings → API</li>
-                    <li>Copy the "Project URL" and "anon" public API key</li>
-                  </ol>
+                  <div className="text-xs text-muted-foreground">
+                    <p className="mb-2">To find your Supabase details:</p>
+                    <ol className="list-decimal pl-4 space-y-1">
+                      <li>Go to your Supabase project dashboard</li>
+                      <li>Navigate to Project Settings → API</li>
+                      <li>Copy the "Project URL" and "anon" public API key</li>
+                    </ol>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
-            <div className="space-y-4 border border-border p-4 rounded-md">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-purple-500" />
-                <h3 className="text-sm font-medium">AI Assistant Configuration</h3>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Customize the system prompt used by the AI Assistant to generate prompts
-              </p>
-
-              <div className="flex items-center space-x-2 mb-2">
-                <Checkbox
-                  id="use-default-prompt"
-                  checked={useDefaultSystemPrompt}
-                  onCheckedChange={(checked) => {
-                    setUseDefaultSystemPrompt(checked as boolean);
-                  }}
-                />
-                <Label htmlFor="use-default-prompt" className="text-sm">
-                  Use default system prompt
-                </Label>
-              </div>
-
-              <div className={useDefaultSystemPrompt ? "opacity-50" : ""}>
-                <div className="flex justify-between mb-2">
-                  <Label htmlFor="system-prompt" className="text-sm">
-                    System Prompt
-                  </Label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleResetSystemPrompt}
-                    className="h-6 text-xs flex items-center gap-1 text-muted-foreground"
-                  >
-                    <RefreshCw className="h-3 w-3" />
-                    Reset to default
-                  </Button>
+            {/* Right Column - AI Assistant Configuration */}
+            <div className="space-y-6">
+              <div className="space-y-4 border border-border p-4 rounded-md">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-purple-500" />
+                  <h3 className="text-sm font-medium">AI Assistant Configuration</h3>
                 </div>
-                <Textarea
-                  id="system-prompt"
-                  value={customSystemPrompt}
-                  onChange={(e) => setCustomSystemPrompt(e.target.value)}
-                  className="min-h-[120px] resize-y"
-                  placeholder="Enter a system prompt for the AI Assistant"
-                  disabled={useDefaultSystemPrompt}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  This prompt defines how the AI Assistant generates prompts based on your requests.
+                <p className="text-xs text-muted-foreground">
+                  Customize the system prompt used by the AI Assistant to generate prompts
                 </p>
+
+                <div className="flex items-center space-x-2 mb-2">
+                  <Checkbox
+                    id="use-default-prompt"
+                    checked={useDefaultSystemPrompt}
+                    onCheckedChange={(checked) => {
+                      setUseDefaultSystemPrompt(checked as boolean);
+                    }}
+                  />
+                  <Label htmlFor="use-default-prompt" className="text-sm">
+                    Use default system prompt
+                  </Label>
+                </div>
+
+                <div className={useDefaultSystemPrompt ? "opacity-50" : ""}>
+                  <div className="flex justify-between mb-2">
+                    <Label htmlFor="system-prompt" className="text-sm">
+                      System Prompt
+                    </Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleResetSystemPrompt}
+                      className="h-6 text-xs flex items-center gap-1 text-muted-foreground"
+                    >
+                      <RefreshCw className="h-3 w-3" />
+                      Reset to default
+                    </Button>
+                  </div>
+                  <Textarea
+                    id="system-prompt"
+                    value={customSystemPrompt}
+                    onChange={(e) => setCustomSystemPrompt(e.target.value)}
+                    className="min-h-[200px] resize-y"
+                    placeholder="Enter a system prompt for the AI Assistant"
+                    disabled={useDefaultSystemPrompt}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    This prompt defines how the AI Assistant generates prompts based on your requests.
+                  </p>
+                </div>
               </div>
             </div>
           </div>

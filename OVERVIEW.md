@@ -1,6 +1,6 @@
 # 🚀 AI Prompt Dashboard
 
-**Last Updated:** 2025-05-22T00:18:56.371Z
+**Last Updated:** 2025-05-25T21:27:38.379Z
 
 ## Project Overview
 
@@ -8,49 +8,53 @@ The AI Prompt Dashboard is a modern Vite-based React application for managing, o
 
 ## ✨ Key Features
 
-- **Prompt Management:** Create, edit, view, and delete AI prompts
-- **Prompt Types:** Support for both system prompts and task prompts
-- **Tagging System:** Organize prompts with customizable tags
-- **Search & Filter:** Full-text search and tag-based filtering
-- **Command Palette:** Quickly navigate and execute actions via keyboard (powered by cmdk)
+- **Prompt Management:** Create, edit, view, and delete AI prompts with UUID support
+- **Prompt Types:** Support for system, task, image, and video prompts with type-specific badges
+- **Tagging System:** Organize prompts with customizable tags and visual tag chips
+- **Search & Filter:** Full-text search and tag-based filtering with responsive masonry layout
+- **AI Assistant:** Generate new prompt ideas using Pollinations.ai API with streaming responses and collapsible interface
 - **Dual Storage Options:**
-  - LocalStorage (offline-first)
-  - Supabase (cloud persistence)
-  - Hybrid mode with automatic sync and fallback
-- **AI Assistant:** Generate new prompt ideas using the Pollinations.ai API with streaming responses
-- **Improved Styling:** Banner and icon-based send button for a modern UI
-- **Automatic API Key Configuration:** Seamless setup and management for API keys
-- **Workspace Context Aware Prompts:** Enhanced prompts leveraging current workspace context
-- **Embedding Search:** Semantic search powered by NeonDB for advanced prompt discovery
-- **User Authentication & Sync:** Supabase-powered login with local fallback
-- **Theming & Responsive Design:** Dark/light mode toggles (Next-Themes) and mobile-friendly UI
-- **Cloudflare Pages Deployment:** Configured for easy deployment with proper SPA routing
+  - LocalStorage (offline-first with automatic tag management)
+  - Supabase (cloud persistence with UUID validation and user management)
+  - Hybrid mode with intelligent bidirectional sync and conflict resolution
+- **Advanced UI/UX:**
+  - Responsive masonry layout (1-3 columns based on screen size)
+  - Expandable prompt cards with copy functionality
+  - Delete confirmation dialogs with "don't show again" option
+  - Empty state handling for filtered and unfiltered views
+- **Settings & Configuration:** Comprehensive settings dialog with Supabase connection testing and system prompt management
+- **Theming & Responsive Design:** Custom purple theme with dark/light mode support and smooth animations
+- **Production Ready:** Cloudflare Pages deployment with automated CI/CD and proper SPA routing
 
 ## 🛠️ Technical Stack
 
 - **Framework:** React 19.1 (TypeScript)
-- **Bundler & Dev Server:** Vite 5.4
-- **Styling:** Tailwind CSS + Radix UI primitives (via Shadcn UI)
-- **Component Library:** Shadcn UI & Radix primitives
-- **State Management:** React Hooks + TanStack Query
-- **Routing:** React Router v7
-- **Forms & Validation:** React Hook Form & Zod
-- **Data Storage:** Supabase JS SDK + localStorage sync stores
-- **Notifications:** Sonner + custom toast hook
-- **Theming:** Next-Themes for dark/light mode
-- **Carousel:** Embla Carousel React
-- **Icons:** Lucide React
-- **Command Palette:** cmdk
-- **Date Handling:** date-fns
+- **Bundler & Dev Server:** Vite 5.4 with React SWC plugin
+- **Styling:** Tailwind CSS with custom purple theme + Radix UI primitives (via Shadcn UI)
+- **Component Library:** Shadcn UI & Radix primitives (40+ components)
+- **State Management:** React Hooks with sophisticated local state management
+- **Routing:** React Router v7 with SPA routing configuration
+- **Forms & Validation:** React Hook Form & Zod for type-safe form handling
+- **Data Storage:**
+  - Supabase JS SDK with custom client configuration
+  - localStorage with automatic tag management
+  - Intelligent sync layer with conflict resolution
+- **AI Integration:** Pollinations.ai API with streaming responses
+- **Notifications:** Sonner + custom toast hook for user feedback
+- **Theming:** Next-Themes for dark/light mode with custom animations
+- **Icons:** Lucide React (consistent icon system)
+- **Date Handling:** date-fns for relative timestamps
+- **Development Tools:** Lovable-tagger for component development
 
 ## ⚙️ Configuration & Tooling
 
-- **TypeScript:** v5.8
-- **Linting:** ESLint v9
-- **Styling:** PostCSS & Tailwind CSS
-- **Deployment:** Cloudflare Pages (wrangler.toml)
-- **SPA Routing:** _routes.json for Cloudflare Pages
-- **CI/CD:** GitHub Actions workflows (.github/workflows)
+- **TypeScript:** v5.8 with relaxed strictness for rapid development
+- **Linting:** ESLint v9 flat config with React hooks and TypeScript support
+- **Styling:** PostCSS & Tailwind CSS with custom animations and purple theme
+- **Deployment:** Cloudflare Pages with wrangler.toml configuration
+- **SPA Routing:** _routes.json for proper client-side routing on Cloudflare Pages
+- **CI/CD:** GitHub Actions workflow for automated deployment on main branch pushes
+- **Package Management:** npm with lockfile for consistent dependencies
 
 ## 📁 Project Structure
 
@@ -60,20 +64,24 @@ prompt-dashboard/
 │   └── _routes.json        # SPA routing configuration for Cloudflare Pages
 ├── src/                    # Source code
 │   ├── components/         # UI components
-│   │   ├── AIAssistant.tsx
-│   │   ├── PromptCard.tsx
-│   │   ├── PromptForm.tsx
-│   │   ├── TagInput.tsx
-│   │   ├── SearchInput.tsx
-│   │   ├── TagFilter.tsx
-│   │   ├── EmptyState.tsx
-│   │   ├── Header.tsx
-│   │   ├── SettingsDialog.tsx
-│   │   └── ui/             # Shadcn UI & Radix primitives
+│   │   ├── AIAssistant.tsx      # Collapsible AI prompt generator with streaming
+│   │   ├── PromptCard.tsx       # Expandable prompt cards with type badges
+│   │   ├── PromptForm.tsx       # Modal form for creating/editing prompts
+│   │   ├── TagInput.tsx         # Tag management with keyboard support
+│   │   ├── SearchInput.tsx      # Search input with icon
+│   │   ├── TagFilter.tsx        # Tag filtering buttons
+│   │   ├── EmptyState.tsx       # Contextual empty states
+│   │   ├── Header.tsx           # App header with settings and sync
+│   │   ├── SettingsDialog.tsx   # Comprehensive settings modal
+│   │   └── ui/                  # Shadcn UI & Radix primitives (40+ components)
 │   ├── hooks/              # Custom React hooks (use-toast, use-mobile)
 │   ├── integrations/       # Third-party SDKs
-│   │   └── supabase/       # Supabase client & types
-│   ├── lib/                # Business logic & stores (promptStore, supabasePromptStore, systemPromptStore)
+│   │   └── supabase/       # Supabase client with custom configuration
+│   ├── lib/                # Business logic & data stores
+│   │   ├── promptStore.ts       # localStorage operations with tag management
+│   │   ├── supabasePromptStore.ts # Supabase integration with UUID validation
+│   │   ├── systemPromptStore.ts # AI assistant system prompt management
+│   │   └── utils.ts             # Utility functions
 │   ├── pages/              # Route pages (Index, NotFound)
 │   └── types/              # TypeScript definitions
 ├── dist/                   # Build output directory
@@ -109,11 +117,14 @@ For detailed deployment instructions, see the [DEPLOYMENT.md](DEPLOYMENT.md) gui
 
 ## 🔮 Future Enhancements
 
-- Prompt version history & diff tracking
-- AI prompt templates and presets
-- Shared prompt libraries and team collaboration
-- Advanced hierarchical tagging
-- Additional storage backends (e.g., NeonDB)
+- **Version Control:** Prompt version history & diff tracking
+- **Templates:** AI prompt templates and presets for common use cases
+- **Collaboration:** Shared prompt libraries and team collaboration features
+- **Advanced Tagging:** Hierarchical tagging system with categories
+- **Storage Backends:** Additional storage options (NeonDB, Firebase, etc.)
+- **Analytics:** Usage analytics and prompt performance tracking
+- **Import/Export:** Bulk import/export functionality for prompt collections
+- **Search Enhancement:** Semantic search with embedding-based similarity
 
 ---
 *Made with ❤️ by Pink Pixel*
