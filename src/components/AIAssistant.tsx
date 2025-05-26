@@ -14,17 +14,19 @@ interface AIAssistantProps {
 }
 
 // Export the default system prompt so it can be used elsewhere
-export const SYSTEM_PROMPT_DEFAULT = `You are a helpful AI prompt generator. Your task is to create clear, effective prompts based on the user's request.
+export const SYSTEM_PROMPT_DEFAULT = `You are a skilled AI prompt generator. Your job is to generate clear, specific, and high-quality prompts based on the user's input and the selected category: System, Task, Image, or Video.
 
-For SYSTEM prompts: Create concise instructions that define the AI's role, personality, constraints, and knowledge. These should guide the AI's overall behavior without asking it to perform specific tasks.
+System Prompts: Define the AI's identity, behavior, tone, constraints, and purpose. Do not assign specific tasks — instead, shape how the AI should act and think. Use detailed, well-structured instructions tailored to the intended use case.
 
-For TASK prompts: Create specific instructions that request the AI to complete a particular task, answer a question, or provide information on a topic.
+Task Prompts: Instruct the AI to perform a specific action, answer a question, solve a problem, or generate content. Focus on clarity, necessary context, and scope. Avoid vague phrasing. Do not include labels like "TASK PROMPT" in the output.
 
-For IMAGE prompts: Create detailed descriptions specifying visual elements, style, composition, colors, and subjects to guide image generation.
+Image Prompts: Describe visual scenes or concepts in detail. Include elements such as composition, subject matter, style, lighting, camera angle, color scheme, mood, and medium. Be creative, precise, and vivid.
 
-For VIDEO prompts: Outline sequences, scenes, camera angles, transitions, duration, and style guidelines for video generation.
+Video Prompts: Describe visual sequences with structure. Include scene layout, character actions, transitions, cinematography (e.g., camera angle, motion), tone, timing, and style references. Ensure logical scene progression and clear direction.
 
-Make all prompts clear, specific, and well-structured. Avoid ambiguity and provide sufficient context.`;
+Output should be only the prompt itself — clean and direct, without any titles, category tags, or commentary.
+
+Always match the desired length and detail level if the user specifies. If not, default to a thorough and well-structured response that provides enough context for optimal results.`;
 
 const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -69,7 +71,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
 
     try {
       let userPrompt = '';
-      
+
       if (promptType === "system") {
         userPrompt = `Generate a SYSTEM PROMPT for: ${prompt}. This should define an AI's role, personality, and constraints without asking it to perform specific tasks.`;
       } else if (promptType === "task") {
@@ -79,19 +81,19 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
       } else {
         userPrompt = `Generate a VIDEO PROMPT for: ${prompt}. This should outline the content, scenes, transitions, and style guidelines.`;
       }
-      
+
       const encodedPrompt = encodeURIComponent(userPrompt);
       // Use the system prompt from state (which comes from storage) instead of the hardcoded one
       const encodedSystemPrompt = encodeURIComponent(systemPrompt);
       // Use stream=true for streaming, model=openai-large, and private=true
       const url = `https://text.pollinations.ai/${encodedPrompt}?model=openai-large&private=true&stream=true&system=${encodedSystemPrompt}`;
-      
+
       // Create a new event source
       const eventSource = new EventSource(url);
       eventSourceRef.current = eventSource;
       let fullText = '';
       let hasReceivedContent = false;
-      
+
       eventSource.onmessage = (event) => {
         try {
           // Only add the actual content, not the JSON metadata
@@ -103,10 +105,10 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
               if (content) {
                 fullText += content;
                 hasReceivedContent = true;
-                
+
                 // Remove [DONE] marker from the text if present
                 fullText = fullText.replace(/\[DONE\]/g, "");
-                
+
                 setResponse({
                   text: fullText,
                   loading: true,
@@ -119,7 +121,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
             fullText += event.data;
             // Remove [DONE] marker from the text if present
             fullText = fullText.replace(/\[DONE\]/g, "");
-            
+
             hasReceivedContent = true;
             setResponse({
               text: fullText,
@@ -132,7 +134,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
           fullText += event.data;
           // Remove [DONE] marker from the text if present
           fullText = fullText.replace(/\[DONE\]/g, "");
-          
+
           hasReceivedContent = true;
           setResponse({
             text: fullText,
@@ -141,11 +143,11 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
           });
         }
       };
-      
+
       eventSource.onerror = (error) => {
         eventSource.close();
         eventSourceRef.current = null;
-        
+
         // Only show error if we haven't received any content
         if (!hasReceivedContent || !fullText.trim()) {
           setResponse({
@@ -153,7 +155,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
             loading: false,
             error: error instanceof Error ? error.message : "Failed to generate content"
           });
-          
+
           toast({
             title: "Error",
             description: "Failed to generate content. Please try again.",
@@ -163,7 +165,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
           // We received content before the error, so treat it as a success
           // Final cleanup of any [DONE] markers
           fullText = fullText.replace(/\[DONE\]/g, "");
-          
+
           setResponse({
             text: fullText,
             loading: false,
@@ -171,14 +173,14 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
           });
         }
       };
-      
+
       eventSource.addEventListener('done', () => {
         eventSource.close();
         eventSourceRef.current = null;
-        
+
         // Final cleanup of any [DONE] markers
         fullText = fullText.replace(/\[DONE\]/g, "");
-        
+
         setResponse({
           text: fullText,
           loading: false,
@@ -191,7 +193,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
         loading: false,
         error: error instanceof Error ? error.message : "Failed to generate content"
       });
-      
+
       toast({
         title: "Error",
         description: "Failed to generate content. Please try again.",
@@ -230,7 +232,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
         className="bg-secondary/90 backdrop-blur-sm rounded-lg shadow-lg border border-purple-500/20"
       >
         <CollapsibleTrigger asChild>
-          <Button 
+          <Button
             className="w-full flex items-center justify-between p-4 rounded-lg bg-purple-600 hover:bg-purple-700 transition-all duration-200"
           >
             <div className="flex items-center gap-2">
@@ -245,8 +247,8 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
             <label htmlFor="promptType" className="text-sm font-medium text-muted-foreground">
               What type of prompt do you want to generate?
             </label>
-            <RadioGroup 
-              value={promptType} 
+            <RadioGroup
+              value={promptType}
               onValueChange={(value) => setPromptType(value as "system" | "task" | "image" | "video")}
               className="flex space-x-4"
             >
@@ -271,8 +273,8 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
 
           <div className="space-y-2">
             <label htmlFor="prompt" className="text-sm font-medium text-muted-foreground">
-              {promptType === "system" 
-                ? "Describe the AI assistant's role and personality" 
+              {promptType === "system"
+                ? "Describe the AI assistant's role and personality"
                 : promptType === "task"
                   ? "What kind of task prompt would you like to create?"
                   : promptType === "image"
@@ -282,8 +284,8 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
             </label>
             <Textarea
               id="prompt"
-              placeholder={promptType === "system" 
-                ? "E.g., A friendly customer service assistant that helps with product inquiries" 
+              placeholder={promptType === "system"
+                ? "E.g., A friendly customer service assistant that helps with product inquiries"
                 : promptType === "task"
                   ? "E.g., Create a prompt for writing a persuasive email"
                   : promptType === "image"
@@ -295,32 +297,32 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
               className="min-h-[80px] bg-secondary/50 border-secondary"
             />
           </div>
-          
-          <Button 
+
+          <Button
             onClick={handleGeneratePrompt}
             disabled={response.loading || !prompt.trim()}
             className="w-full bg-purple-500 hover:bg-purple-700"
           >
             {response.loading ? "Generating..." : "Generate Prompt"}
           </Button>
-          
+
           {response.text && (
             <div className="space-y-3">
-              <div 
+              <div
                 ref={responseRef}
                 className="bg-secondary p-3 rounded-md max-h-[200px] overflow-y-auto whitespace-pre-wrap text-sm"
               >
                 {response.text}
               </div>
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="flex-1"
                   onClick={handleCopyResponse}
                 >
                   <Copy className="mr-2 h-4 w-4" /> Copy
                 </Button>
-                <Button 
+                <Button
                   className="flex-1 bg-purple-500 hover:bg-purple-700"
                   onClick={handleUsePrompt}
                 >
@@ -329,7 +331,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
               </div>
             </div>
           )}
-          
+
           {/* Only show the error message if there is an error AND no valid response text */}
           {response.error && !response.text && (
             <div className="p-3 bg-destructive/20 border border-destructive/40 rounded-md text-sm text-destructive">

@@ -6,8 +6,21 @@
 
 A modern web application for managing and organizing your AI prompts, with tagging, search, and cloud synchronization.
 
+<div align="center">
+
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.1.0-green.svg)
+![Version](https://img.shields.io/badge/version-1.1.0-green.svg)
+![NPM](https://img.shields.io/npm/v/@pinkpixel/ai-prompt-dashboard?color=red)
+![React](https://img.shields.io/badge/React-19.1.0-61DAFB?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?logo=typescript)
+![Vite](https://img.shields.io/badge/Vite-5.4.19-646CFF?logo=vite)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.11-38B2AC?logo=tailwind-css)
+![Supabase](https://img.shields.io/badge/Supabase-2.49.7-3ECF8E?logo=supabase)
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)
+![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
+
+</div>
 
 ## ✨ Features
 
@@ -73,32 +86,17 @@ To use cloud storage features:
    - Select "Supabase" or "Both" as your storage option
    - Enter your Supabase Project URL and API Key
      - Find these in your Supabase dashboard under Project Settings → API
-   - Click "Test Connection" to verify your credentials
+   - Click "Connect" to verify your credentials
 3. Create the required database table:
 
-   - After connecting, you'll need to set up the prompts table
-   - Click the "Open Supabase SQL Editor" button in the settings
-   - Copy and paste the following SQL:
+   - After connecting, you'll need to set up the prompts table manually
+   - Click the "Open SQL Editor" button in the settings
+   - Copy the SQL code provided in the settings (or use the SQL from `supabase-setup.sql`)
+   - Paste and run it in the Supabase SQL Editor
+4. Return to the Prompt Dashboard and click "Connect" again to verify the table setup
+5. Save your settings
 
-   ```sql
-   CREATE TABLE IF NOT EXISTS prompts (
-     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-     content TEXT NOT NULL,
-     tags TEXT[] DEFAULT '{}',
-     createdat TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-     title TEXT,
-     category TEXT DEFAULT 'task',
-     description TEXT DEFAULT '',
-     user_id TEXT NOT NULL,
-     ispublic BOOLEAN DEFAULT false,
-     likes INTEGER DEFAULT 0,
-     views INTEGER DEFAULT 0,
-     comments INTEGER DEFAULT 0
-   );
-   ```
-4. Run the SQL to create the table
-5. Return to the Prompt Dashboard and click "Test Connection" again to verify the table setup
-6. Save your settings
+   **Note:** Automatic table creation isn't supported by Supabase for security reasons, so this one-time manual setup is required.
 
 The application will now use your Supabase instance for cloud storage!
 

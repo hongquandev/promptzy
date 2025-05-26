@@ -1,7 +1,6 @@
 import { supabase, getSupabaseCredentials } from "@/integrations/supabase/client";
 import { createClient } from '@supabase/supabase-js';
 import { Prompt, Tag } from "@/types";
-import { savePrompt } from "@/lib/promptStore"; // Import local save to update invalid IDs
 
 // Regex to validate UUID strings
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -24,11 +23,12 @@ interface PromptsTable {
 
 // SQL for table creation - separated for reuse
 export const CREATE_TABLE_SQL = `
+-- Create the prompts table with exact column names expected by the code
 CREATE TABLE IF NOT EXISTS prompts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   content TEXT NOT NULL,
   tags TEXT[] DEFAULT '{}',
-  createdat TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  createdat TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   title TEXT,
   category TEXT DEFAULT 'task',
   description TEXT DEFAULT '',
@@ -38,13 +38,32 @@ CREATE TABLE IF NOT EXISTS prompts (
   views INTEGER DEFAULT 0,
   comments INTEGER DEFAULT 0
 );
+
+-- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_prompts_user_id ON prompts(user_id);
+CREATE INDEX IF NOT EXISTS idx_prompts_createdat ON prompts(createdat);
+CREATE INDEX IF NOT EXISTS idx_prompts_tags ON prompts USING GIN(tags);
+
+-- Enable Row Level Security
+ALTER TABLE prompts ENABLE ROW LEVEL SECURITY;
+
+-- Drop any existing policies to start fresh
+DROP POLICY IF EXISTS "Users can view their own prompts" ON prompts;
+DROP POLICY IF EXISTS "Users can insert their own prompts" ON prompts;
+DROP POLICY IF EXISTS "Users can update their own prompts" ON prompts;
+DROP POLICY IF EXISTS "Users can delete their own prompts" ON prompts;
+DROP POLICY IF EXISTS "Allow all access" ON prompts;
+DROP POLICY IF EXISTS "Temporary allow all" ON prompts;
+
+-- Create permissive policy for all operations (you can restrict this later)
+CREATE POLICY "Allow all operations for now" ON prompts FOR ALL USING (true);
 `;
 
 // Use a single Supabase client instance for all operations to prevent multiple instances
 const supabaseClient = supabase;
 
 // Function to check if the prompts table exists
-export const checkTableExists = async (client: any): Promise<boolean> => {
+export const checkTableExists = async (client: ReturnType<typeof createClient>): Promise<boolean> => {
   try {
     console.log("Checking if prompts table exists...");
     const { error } = await client.from('prompts').select('id').limit(1);
@@ -63,34 +82,11 @@ export const checkTableExists = async (client: any): Promise<boolean> => {
   }
 };
 
-// Function to attempt to create the prompts table (but this will likely not work
-// in most Supabase instances due to permission limitations)
-export const createPromptsTable = async (client: any): Promise<{ success: boolean; error?: any }> => {
-  try {
-    // NOTE: Most Supabase instances do not allow direct SQL execution via the API
-    // This is provided as a fallback but will likely fail in most environments
-    console.log("Attempting to create prompts table, but this will likely fail due to permission restrictions...");
+// Note: Automatic table creation is not supported by Supabase for security reasons.
+// Users must create the table manually using the SQL Editor in their Supabase dashboard.
 
-    // This is now just here for backwards compatibility but will likely fail
-    const { error } = await client.rpc('execute_sql', {
-      sql: CREATE_TABLE_SQL
-    });
-
-    if (!error) {
-      return { success: true };
-    }
-
-    console.error("Table creation failed as expected:", error);
-    return { success: false, error };
-  } catch (err) {
-    console.error("Error creating prompts table:", err);
-    return { success: false, error: err };
-  }
-};
-
-// Function to check if the prompts table exists and create it if it doesn't
-// (but creation will likely need to be done manually)
-const ensurePromptsTable = async (client: any) => {
+// Function to check if the prompts table exists
+const ensurePromptsTable = async (client: ReturnType<typeof createClient>) => {
   try {
     // Check if table exists
     const tableExists = await checkTableExists(client);
@@ -99,41 +95,74 @@ const ensurePromptsTable = async (client: any) => {
       return true;
     }
 
-    console.log("Prompts table doesn't exist. Manual creation will likely be required.");
-
-    // Try to create the table automatically, but this will likely fail
-    // due to permissions on most Supabase instances
-    const { success } = await createPromptsTable(client);
-
-    return tableExists || success;
+    console.log("Prompts table doesn't exist. Manual creation required using Supabase SQL Editor.");
+    return false;
   } catch (err) {
-    console.error("Error checking or creating prompts table:", err);
+    console.error("Error checking prompts table:", err);
     return false;
   }
 };
 
-// Function to get a consistent user ID (either from auth or device-specific)
-const getUserId = async (client: any): Promise<string> => {
+// Function to get a consistent user ID (either from auth or user-defined)
+const getUserId = async (client: ReturnType<typeof createClient>): Promise<string> => {
   try {
     // First try to get authenticated user ID
     const { data: sessionData } = await client.auth.getSession();
     if (sessionData?.session?.user?.id) {
+      console.log("Using authenticated user ID:", sessionData.session.user.id);
       return sessionData.session.user.id;
     }
 
-    // If no authenticated user, use a device-specific anonymous ID
+    // If no authenticated user, check for a custom user ID set by the user
+    let customUserId = localStorage.getItem('custom-user-id');
+    if (customUserId && customUserId.trim()) {
+      console.log("Using custom user ID:", customUserId);
+      return customUserId.trim();
+    }
+
+    // If no custom user ID, use a device-specific anonymous ID
     let anonymousId = localStorage.getItem('supabase-anonymous-id');
     if (!anonymousId) {
       // Generate a new anonymous ID if none exists
       anonymousId = `anon-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       localStorage.setItem('supabase-anonymous-id', anonymousId);
+      console.log("Generated new anonymous ID:", anonymousId);
+    } else {
+      console.log("Using existing anonymous ID:", anonymousId);
     }
     return anonymousId;
   } catch (err) {
     console.error("Error getting user ID:", err);
     // Fallback to simple anonymous ID with timestamp
-    return `anon-${Date.now()}`;
+    const fallbackId = `anon-${Date.now()}`;
+    console.log("Using fallback ID:", fallbackId);
+    return fallbackId;
   }
+};
+
+// Helper function to set a custom user ID for cross-browser sync
+export const setCustomUserId = (userId: string): boolean => {
+  try {
+    if (!userId || !userId.trim()) {
+      localStorage.removeItem('custom-user-id');
+      console.log("Custom user ID cleared");
+      return true;
+    }
+
+    const cleanUserId = userId.trim();
+    localStorage.setItem('custom-user-id', cleanUserId);
+    console.log("Custom user ID set:", cleanUserId);
+    return true;
+  } catch (error) {
+    console.error("Error setting custom user ID:", error);
+    return false;
+  }
+};
+
+// Helper function to get the current user ID (for display purposes)
+export const getCurrentUserId = async (): Promise<string> => {
+  const client = supabaseClient;
+  return await getUserId(client);
 };
 
 export const getPromptsFromSupabase = async (): Promise<Prompt[]> => {
@@ -195,8 +224,6 @@ export const savePromptToSupabase = async (prompt: Prompt): Promise<boolean> => 
     if (!UUID_REGEX.test(idToSave)) {
       const newId = crypto.randomUUID();
       console.log(`Invalid UUID "${prompt.id}" detected, regenerating to "${newId}"`);
-      // Update local storage with new valid UUID
-      savePrompt({ ...prompt, id: newId });
       idToSave = newId;
     }
     console.log("Saving prompt to Supabase:", idToSave);

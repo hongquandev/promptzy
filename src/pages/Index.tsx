@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Header from "@/components/Header";
 import SearchInput from "@/components/SearchInput";
 import TagFilter from "@/components/TagFilter";
@@ -7,8 +7,7 @@ import EmptyState from "@/components/EmptyState";
 import PromptForm from "@/components/PromptForm";
 import AIAssistant from "@/components/AIAssistant";
 import { Prompt, Tag } from "@/types";
-import { getPrompts, savePrompt, deletePrompt, getAllTags } from "@/lib/promptStore";
-import { getPromptsFromSupabase, savePromptToSupabase, deletePromptFromSupabase, syncPromptsToSupabase, testSupabaseConnection } from "@/lib/supabasePromptStore";
+import { getPromptsFromSupabase, savePromptToSupabase, deletePromptFromSupabase, testSupabaseConnection } from "@/lib/supabasePromptStore";
 import { useToast } from "@/hooks/use-toast";
 import { createSupabaseClient } from "@/integrations/supabase/client";
 import {
@@ -24,9 +23,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
-// Key for storage type preference in localStorage
-const STORAGE_TYPE_KEY = 'ai-prompts-storage-type';
-
 // Create a fresh Supabase client to handle authentication
 const supabase = createSupabaseClient();
 
@@ -37,21 +33,6 @@ const Index = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
-  const [storageType, setStorageType] = useState<"local" | "supabase" | "both">(() => {
-    try {
-      const savedType = localStorage.getItem(STORAGE_TYPE_KEY);
-      console.log("Loading initial storage type from localStorage:", savedType);
-      if (savedType) {
-        const parsed = JSON.parse(savedType);
-        if (parsed === "local" || parsed === "supabase" || parsed === "both") {
-          return parsed;
-        }
-      }
-    } catch (error) {
-      console.error("Error parsing storage type from localStorage:", error);
-    }
-    return "local"; // Default fallback
-  });
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [supabaseConnected, setSupabaseConnected] = useState<boolean>(false);
   const { toast } = useToast();
@@ -59,10 +40,7 @@ const Index = () => {
   // Delete confirmation state
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [suppressDeleteConfirm, setSuppressDeleteConfirm] = useState<boolean>(() => {
-    const saved = localStorage.getItem("suppressDeleteConfirm");
-    return saved ? JSON.parse(saved) : false;
-  });
+  const [suppressDeleteConfirm, setSuppressDeleteConfirm] = useState<boolean>(false);
 
   // Responsive Masonry: calculate number of columns based on breakpoints
   const [colCount, setColCount] = useState<number>(() => {
@@ -83,11 +61,6 @@ const Index = () => {
 
   // Function to check Supabase connection status
   const checkSupabaseConnection = useCallback(async () => {
-    if (storageType === "local") {
-      setSupabaseConnected(false);
-      return false;
-    }
-    
     try {
       const isConnected = await testSupabaseConnection();
       setSupabaseConnected(isConnected);
@@ -97,7 +70,7 @@ const Index = () => {
       setSupabaseConnected(false);
       return false;
     }
-  }, [storageType]);
+  }, []);
 
   // Check Supabase auth status
   useEffect(() => {
@@ -106,88 +79,53 @@ const Index = () => {
       setIsLoggedIn(!!data.session);
       checkSupabaseConnection();
     };
-    
+
     checkAuth();
-    
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setIsLoggedIn(!!session);
       checkSupabaseConnection();
     });
-    
+
     return () => {
       subscription.unsubscribe();
     };
   }, [checkSupabaseConnection]);
 
-  // Load prompts based on storage type
+  // Load prompts from Supabase
   useEffect(() => {
     const loadPrompts = async () => {
-      console.log("Loading prompts with storage type:", storageType, "Supabase connected:", supabaseConnected);
-      
-      // Always check local storage
-      const localPrompts = getPrompts();
-      console.log(`Found ${localPrompts.length} prompts in local storage`);
-      
-      if (storageType === "local" || !supabaseConnected) {
-        setPrompts(localPrompts);
-        const localTags = getAllTags();
-        setAllTags(localTags);
+      console.log("Loading prompts from Supabase, connected:", supabaseConnected);
+
+      if (!supabaseConnected) {
+        console.log("Supabase not connected, skipping prompt load");
         return;
       }
-      
+
       try {
-        // For Supabase or both, fetch from Supabase
         const supabasePrompts = await getPromptsFromSupabase();
         console.log(`Retrieved ${supabasePrompts.length} prompts from Supabase`);
-        
-        if (storageType === "supabase") {
-          setPrompts(supabasePrompts);
-          // Update local tags based on Supabase prompts
-          const tagsFromSupabase = supabasePrompts.flatMap(p => p.tags);
-          setAllTags(tagsFromSupabase);
-        } else if (storageType === "both") {
-          // Merge local and Supabase prompts, preferring Supabase versions if IDs match
-          const supabaseIds = new Set(supabasePrompts.map(p => p.id));
-          const uniqueLocalPrompts = localPrompts.filter(p => !supabaseIds.has(p.id));
-          const mergedPrompts = [...supabasePrompts, ...uniqueLocalPrompts];
-          
-          console.log(`Merging ${supabasePrompts.length} Supabase prompts with ${uniqueLocalPrompts.length} unique local prompts`);
-          setPrompts(mergedPrompts);
-          
-          // Sync unique local prompts to Supabase if using "both" storage
-          if (uniqueLocalPrompts.length > 0) {
-            console.log(`Syncing ${uniqueLocalPrompts.length} local prompts to Supabase`);
-            await syncPromptsToSupabase(uniqueLocalPrompts);
-            
-            // Also save Supabase prompts to local storage to ensure complete bidirectional sync
-            console.log(`Syncing ${supabasePrompts.length} Supabase prompts to local storage`);
-            supabasePrompts.forEach(prompt => savePrompt(prompt));
-          }
-        }
+
+        setPrompts(supabasePrompts);
+        // Extract unique tags from prompts
+        const tagsFromSupabase = supabasePrompts.flatMap(p => p.tags);
+        const uniqueTags = Array.from(
+          new Map(tagsFromSupabase.map(tag => [tag.id, tag])).values()
+        );
+        setAllTags(uniqueTags);
       } catch (error) {
         console.error("Error loading prompts from Supabase:", error);
-        // Fallback to local storage
-        setPrompts(localPrompts);
         toast({
-          title: "Error loading cloud data",
-          description: "Falling back to local storage",
+          title: "Error loading prompts",
+          description: "Could not load prompts from Supabase. Please check your connection.",
           variant: "destructive",
         });
       }
-      
-      // Update tags based on current prompts
-      const loadedTags = getAllTags();
-      setAllTags(loadedTags);
     };
-    
-    loadPrompts();
-  }, [storageType, supabaseConnected, toast]);
 
-  // Explicitly save to localStorage whenever storageType changes
-  useEffect(() => {
-    console.log("Saving storage type preference:", storageType);
-    localStorage.setItem(STORAGE_TYPE_KEY, JSON.stringify(storageType));
-  }, [storageType]);
+    loadPrompts();
+  }, [supabaseConnected, toast, checkSupabaseConnection]);
+
 
   const handleAddPrompt = () => {
     setEditingPrompt(null);
@@ -199,153 +137,94 @@ const Index = () => {
     setIsFormOpen(true);
   };
 
-  const handleStorageTypeChange = async (type: "local" | "supabase" | "both") => {
-    // When switching to Supabase or both, test connection directly
-    if (type !== "local") {
-      try {
-        const isConnected = await testSupabaseConnection();
-        setSupabaseConnected(isConnected);
-        if (!isConnected) {
-          toast({
-            title: "Supabase Connection Failed",
-            description: "Could not connect to Supabase. Please check your settings.",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        // If connection was successful and changing to 'both' or 'supabase',
-        // offer to sync existing local prompts to Supabase
-        if (type === "both" || type === "supabase") {
-          const localPrompts = getPrompts();
-          if (localPrompts.length > 0) {
-            // Sync local prompts to Supabase
-            toast({
-              title: "Syncing Prompts",
-              description: `Syncing ${localPrompts.length} prompts to Supabase...`,
-            });
-            await syncPromptsToSupabase(localPrompts);
-            toast({
-              title: "Sync Complete",
-              description: `${localPrompts.length} prompts synced to Supabase.`,
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Error testing Supabase connection:", error);
-        toast({
-          title: "Supabase Connection Failed",
-          description: "Could not connect to Supabase. Please check your settings.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    // Update storage type state and persist to localStorage right away (in addition to effect)
-    setStorageType(type);
-    localStorage.setItem(STORAGE_TYPE_KEY, JSON.stringify(type));
-
-    // If switching from cloud to local, pull down cloud prompts to local
-    if (storageType !== "local" && type === "local" && supabaseConnected) {
-      try {
-        const supabasePrompts = await getPromptsFromSupabase();
-        supabasePrompts.forEach(prompt => savePrompt(prompt));
-        toast({
-          title: "Prompts Synchronized",
-          description: "Your cloud prompts have been saved locally",
-        });
-      } catch (error) {
-        console.error("Error syncing from Supabase to local:", error);
-      }
-    }
-  };
-
   const handleSavePrompt = async (promptData: Prompt) => {
     // Ensure promptData has all required fields
     const completePromptData: Prompt = {
-      id: promptData.id || Date.now().toString(),
+      id: promptData.id || crypto.randomUUID(),
       text: promptData.text,
       tags: promptData.tags || [],
       type: promptData.type || "task",
       createdAt: promptData.createdAt || new Date().toISOString(),
     };
-    
-    // Save based on storage type
-    if (storageType === "local" || !supabaseConnected) {
-      // Save to localStorage only
-      savePrompt(completePromptData);
-    } else {
-      try {
-        // Save to Supabase
-        await savePromptToSupabase(completePromptData);
-        
-        // If "both", also save to local storage
-        if (storageType === "both") {
-          savePrompt(completePromptData);
-        }
-      } catch (error) {
-        console.error("Error saving to Supabase:", error);
-        toast({
-          title: "Error saving to cloud",
-          description: "Your prompt was saved locally instead",
-          variant: "destructive",
-        });
-        // Fallback to local storage
-        savePrompt(completePromptData);
-      }
+
+    if (!supabaseConnected) {
+      toast({
+        title: "Supabase not connected",
+        description: "Please check your Supabase connection in settings",
+        variant: "destructive",
+      });
+      return;
     }
-    
-    // Update state
-    const updatedPrompts = editingPrompt?.id 
-      ? prompts.map(p => p.id === completePromptData.id ? completePromptData : p)
-      : [completePromptData, ...prompts];
-    
-    setPrompts(updatedPrompts);
-    
-    // Update all tags
-    const updatedTags = getAllTags();
-    setAllTags(updatedTags);
+
+    try {
+      // Save to Supabase
+      await savePromptToSupabase(completePromptData);
+
+      // Update state
+      const updatedPrompts = editingPrompt?.id
+        ? prompts.map(p => p.id === completePromptData.id ? completePromptData : p)
+        : [completePromptData, ...prompts];
+
+      setPrompts(updatedPrompts);
+
+      // Update tags from current prompts
+      const tagsFromPrompts = updatedPrompts.flatMap(p => p.tags);
+      const uniqueTags = Array.from(
+        new Map(tagsFromPrompts.map(tag => [tag.id, tag])).values()
+      );
+      setAllTags(uniqueTags);
+
+      toast({
+        title: "Prompt saved",
+        description: "Your prompt has been saved to Supabase",
+      });
+    } catch (error) {
+      console.error("Error saving to Supabase:", error);
+      toast({
+        title: "Error saving prompt",
+        description: "Could not save prompt to Supabase. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeletePrompt = async (id: string) => {
-    // Delete based on storage type
-    if (storageType === "local" || !supabaseConnected) {
-      // Delete from localStorage only
-      deletePrompt(id);
-    } else {
-      try {
-        // Delete from Supabase
-        await deletePromptFromSupabase(id);
-        
-        // If "both", also delete from local storage
-        if (storageType === "both") {
-          deletePrompt(id);
-        }
-      } catch (error) {
-        console.error("Error deleting from Supabase:", error);
-        toast({
-          title: "Error deleting from cloud",
-          description: "The prompt was only removed locally",
-          variant: "destructive",
-        });
-        // Fallback to local storage deletion
-        deletePrompt(id);
-      }
+    if (!supabaseConnected) {
+      toast({
+        title: "Supabase not connected",
+        description: "Please check your Supabase connection in settings",
+        variant: "destructive",
+      });
+      return;
     }
-    
-    // Update state
-    const updatedPrompts = prompts.filter(p => p.id !== id);
-    setPrompts(updatedPrompts);
-    
-    // Update all tags
-    const updatedTags = getAllTags();
-    setAllTags(updatedTags);
-    
-    toast({
-      title: "Prompt deleted",
-      description: "Your prompt has been successfully deleted",
-    });
+
+    try {
+      // Delete from Supabase
+      await deletePromptFromSupabase(id);
+
+      // Update state
+      const updatedPrompts = prompts.filter(p => p.id !== id);
+      setPrompts(updatedPrompts);
+
+      // Update tags from remaining prompts
+      const tagsFromPrompts = updatedPrompts.flatMap(p => p.tags);
+      const uniqueTags = Array.from(
+        new Map(tagsFromPrompts.map(tag => [tag.id, tag])).values()
+      );
+      setAllTags(uniqueTags);
+
+      toast({
+        title: "Prompt deleted",
+        description: "Your prompt has been successfully deleted",
+      });
+    } catch (error) {
+      console.error("Error deleting from Supabase:", error);
+      toast({
+        title: "Error deleting prompt",
+        description: "Could not delete prompt from Supabase. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Confirmation handlers
@@ -370,17 +249,16 @@ const Index = () => {
   };
   const toggleSuppressDeleteConfirm = (checked: boolean) => {
     setSuppressDeleteConfirm(checked);
-    localStorage.setItem("suppressDeleteConfirm", JSON.stringify(checked));
   };
 
   const handleToggleTag = (tagId: string) => {
-    setSelectedTags(prevTags => 
-      prevTags.includes(tagId) 
+    setSelectedTags(prevTags =>
+      prevTags.includes(tagId)
         ? prevTags.filter(id => id !== tagId)
         : [...prevTags, tagId]
     );
   };
-  
+
   const handleUseAIPrompt = (text: string, promptType: "system" | "task" | "image" | "video") => {
     // Create a new prompt with the AI-generated text
     // Generate a temporary ID for the new prompt
@@ -391,7 +269,7 @@ const Index = () => {
       type: promptType, // Use the selected AI assistant prompt type
       createdAt: ""
     };
-    
+
     // Open the form with the AI text already populated
     setEditingPrompt(tempPrompt);
     setIsFormOpen(true);
@@ -400,15 +278,15 @@ const Index = () => {
 
   const filteredPrompts = prompts.filter(prompt => {
     // Filter by search term
-    const matchesSearch = searchTerm 
+    const matchesSearch = searchTerm
       ? prompt.text.toLowerCase().includes(searchTerm.toLowerCase())
       : true;
-    
+
     // Filter by selected tags
-    const matchesTags = selectedTags.length > 0 
+    const matchesTags = selectedTags.length > 0
       ? selectedTags.every(tagId => prompt.tags.some(tag => tag.id === tagId))
       : true;
-    
+
     return matchesSearch && matchesTags;
   });
 
@@ -425,21 +303,19 @@ const Index = () => {
 
   return (
     <div className="container mx-auto py-8 px-4 min-h-screen max-w-5xl">
-      <Header 
-        onAddPrompt={handleAddPrompt} 
-        storageType={storageType} 
-        onStorageTypeChange={handleStorageTypeChange} 
+      <Header
+        onAddPrompt={handleAddPrompt}
       />
-      
+
       <div className="mb-8 space-y-6">
         <SearchInput searchTerm={searchTerm} onSearchChange={setSearchTerm} />
-        <TagFilter 
-          allTags={allTags} 
-          selectedTags={selectedTags} 
-          onToggleTag={handleToggleTag} 
+        <TagFilter
+          allTags={allTags}
+          selectedTags={selectedTags}
+          onToggleTag={handleToggleTag}
         />
       </div>
-      
+
       {filteredPrompts.length > 0 ? (
         <div className="flex gap-4 items-start">
           {columns.map((col, colIdx) => (
@@ -458,14 +334,14 @@ const Index = () => {
       ) : (
         <EmptyState onAddPrompt={handleAddPrompt} isFiltered={isFiltered} />
       )}
-      
+
       <PromptForm
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         onSave={handleSavePrompt}
         editingPrompt={editingPrompt}
       />
-      
+
       <AIAssistant onUsePrompt={handleUseAIPrompt} />
       {/* Delete confirmation dialog */}
       <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>

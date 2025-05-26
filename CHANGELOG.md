@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-05-26
+
 ### Added
 - System prompt configuration for the AI Assistant
 - Option to use default or custom system prompt in settings
@@ -28,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better logging for troubleshooting sync issues
 - Detailed documentation on synchronization behavior in README
 - Updated OVERVIEW.md with latest project information and deployment details
+- Browser refresh notification for new Supabase connections
+- Enhanced AI system prompt with detailed category-specific guidelines
+- Auto-update mechanism for outdated AI system prompts in settings
 
 ### Changed
 - Improved Supabase client to dynamically use user-provided credentials
@@ -40,6 +45,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced storage type persistence between sessions
 - Improved authentication detection for anonymous Supabase usage
 - Verified Cloudflare Pages deployment configuration with proper SPA routing
+- "Test Connection" button renamed to "Connect" for better UX
+- AI system prompt completely rewritten for better prompt generation quality
+- Removed non-functional "Create Table" button and improved manual setup flow
 
 ### Fixed
 - Table access error handling for Supabase environments
@@ -52,6 +60,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed bugs in prompt import/export between storage types
 - Improved handling of Supabase connection failures
 - User-specific data filtering to prevent mixing prompts between users
+- Misleading "Create Table" button that couldn't actually create tables
+- Better error handling and messaging for Supabase connection failures
+- Automatic update of outdated AI system prompts for existing users
 
 ## [0.1.0] - 2025-05-19
 

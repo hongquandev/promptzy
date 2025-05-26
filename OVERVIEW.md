@@ -1,6 +1,6 @@
 # 🚀 AI Prompt Dashboard
 
-**Last Updated:** 2025-05-25T21:27:38.379Z
+**Last Updated:** 2025-05-26T00:56:16.535Z
 
 ## Project Overview
 
@@ -13,10 +13,10 @@ The AI Prompt Dashboard is a modern Vite-based React application for managing, o
 - **Tagging System:** Organize prompts with customizable tags and visual tag chips
 - **Search & Filter:** Full-text search and tag-based filtering with responsive masonry layout
 - **AI Assistant:** Generate new prompt ideas using Pollinations.ai API with streaming responses and collapsible interface
-- **Dual Storage Options:**
-  - LocalStorage (offline-first with automatic tag management)
-  - Supabase (cloud persistence with UUID validation and user management)
-  - Hybrid mode with intelligent bidirectional sync and conflict resolution
+- **Cloud Storage:**
+  - Supabase-only storage for reliable cloud persistence
+  - UUID validation and user management
+  - Eliminated localStorage to prevent sync issues
 - **Advanced UI/UX:**
   - Responsive masonry layout (1-3 columns based on screen size)
   - Expandable prompt cards with copy functionality
@@ -37,8 +37,8 @@ The AI Prompt Dashboard is a modern Vite-based React application for managing, o
 - **Forms & Validation:** React Hook Form & Zod for type-safe form handling
 - **Data Storage:**
   - Supabase JS SDK with custom client configuration
-  - localStorage with automatic tag management
-  - Intelligent sync layer with conflict resolution
+  - Cloud-only storage for reliable data persistence
+  - UUID validation and proper error handling
 - **AI Integration:** Pollinations.ai API with streaming responses
 - **Notifications:** Sonner + custom toast hook for user feedback
 - **Theming:** Next-Themes for dark/light mode with custom animations
@@ -71,15 +71,14 @@ prompt-dashboard/
 │   │   ├── SearchInput.tsx      # Search input with icon
 │   │   ├── TagFilter.tsx        # Tag filtering buttons
 │   │   ├── EmptyState.tsx       # Contextual empty states
-│   │   ├── Header.tsx           # App header with settings and sync
+│   │   ├── Header.tsx           # App header with settings
 │   │   ├── SettingsDialog.tsx   # Comprehensive settings modal
 │   │   └── ui/                  # Shadcn UI & Radix primitives (40+ components)
 │   ├── hooks/              # Custom React hooks (use-toast, use-mobile)
 │   ├── integrations/       # Third-party SDKs
 │   │   └── supabase/       # Supabase client with custom configuration
 │   ├── lib/                # Business logic & data stores
-│   │   ├── promptStore.ts       # localStorage operations with tag management
-│   │   ├── supabasePromptStore.ts # Supabase integration with UUID validation
+│   │   ├── supabasePromptStore.ts # Supabase cloud storage with UUID validation
 │   │   ├── systemPromptStore.ts # AI assistant system prompt management
 │   │   └── utils.ts             # Utility functions
 │   ├── pages/              # Route pages (Index, NotFound)
@@ -115,8 +114,16 @@ The project is configured for deployment to Cloudflare Pages using Wrangler. The
 
 For detailed deployment instructions, see the [DEPLOYMENT.md](DEPLOYMENT.md) guide.
 
+## ⚠️ Recent Changes & User Preferences
+
+- **✅ Storage Simplified:** Removed localStorage and sync functionality - now uses Supabase-only storage for reliability
+- **✅ Sync Issues Resolved:** Eliminated prompt duplication and cross-browser sync problems by removing hybrid storage
+- **Authentication:** User prefers login-based authentication system with multiple options (Google, GitHub, email/password) over anonymous user IDs
+- **✅ Cloud Operations:** All CRUD operations now properly update Supabase database with proper error handling
+
 ## 🔮 Future Enhancements
 
+- **Authentication System:** Implement proper login-based authentication with multiple providers
 - **Version Control:** Prompt version history & diff tracking
 - **Templates:** AI prompt templates and presets for common use cases
 - **Collaboration:** Shared prompt libraries and team collaboration features
