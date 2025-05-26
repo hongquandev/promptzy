@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Browser refresh notification for new Supabase connections
 - Enhanced AI system prompt with detailed category-specific guidelines
 - Auto-update mechanism for outdated AI system prompts in settings
+- Global CLI installation support with `prompt-dashboard` and `ai-prompt-dashboard` commands
+- Beautiful ASCII banner and colored output for CLI
+- NPX support for running without installation
 
 ### Changed
 - Improved Supabase client to dynamically use user-provided credentials

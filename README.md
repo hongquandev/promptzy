@@ -36,16 +36,38 @@ A modern web application for managing and organizing your AI prompts, with taggi
 
 ## 🖥️ Screenshots
 
-<p align="center">
-  <img src="https://res.cloudinary.com/di7ctlowx/image/upload/v1748230755/dashboard_htdhg3.png" width="800" />
+*Coming soon*
 
 ## 🛠️ Installation
+
+### Quick Start (Global Installation)
+
+Install globally from npm and run with a single command:
+
+```bash
+# Install globally
+npm install -g @pinkpixel/ai-prompt-dashboard
+
+# Run the dashboard
+prompt-dashboard
+```
+
+The dashboard will start on `http://localhost:4173` and open automatically in your browser!
+
+**Alternative commands:**
+```bash
+# You can also use the full name
+ai-prompt-dashboard
+
+# Or run directly with npx (no installation needed)
+npx @pinkpixel/ai-prompt-dashboard
+```
 
 ### Local Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/prompt-dashboard.git
+git clone https://github.com/pinkpixel-dev/ai-prompt-dashboard.git
 
 # Navigate to the project directory
 cd prompt-dashboard
