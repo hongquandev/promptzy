@@ -1,8 +1,8 @@
-<p align="center">
-  <img src="public/icon.png" alt="Dashboard Icon" width="200" height="200" />
-</p>
+# 🪄 AI Prompt Dashboard ✨
 
-# 🚀 AI Prompt Dashboard
+<p align="center">
+  <img src="https://res.cloudinary.com/di7ctlowx/image/upload/v1748230916/icon_xgilb8.png" alt="Dashboard Icon" width="250" />
+</p>
 
 A modern web application for managing and organizing your AI prompts, with tagging, search, and cloud synchronization.
 
@@ -36,7 +36,8 @@ A modern web application for managing and organizing your AI prompts, with taggi
 
 ## 🖥️ Screenshots
 
-*Coming soon*
+<p align="center">
+  <img src="https://res.cloudinary.com/di7ctlowx/image/upload/v1748230755/dashboard_htdhg3.png" width="800" />
 
 ## 🛠️ Installation
 
