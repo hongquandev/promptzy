@@ -1,6 +1,6 @@
 # ✨ Promptzy 🎯
 
-**Last Updated:** 2025-05-26T03:58:56.920Z
+**Last Updated:** 2025-05-28T01:47:10.617Z
 
 ## Project Overview
 
@@ -23,6 +23,12 @@
   - Expandable prompt cards with copy functionality
   - Delete confirmation dialogs with "don't show again" option
   - Empty state handling for filtered and unfiltered views
+  - Mobile-optimized responsive design with proper touch targets
+- **Progressive Web App (PWA):**
+  - Installable as mobile app directly from browser
+  - Service worker for offline functionality and caching
+  - Native app experience with no browser UI
+  - Auto-updates and home screen installation
 - **Settings & Configuration:** Comprehensive settings dialog with Supabase connection testing and system prompt management
 - **Theming & Responsive Design:** Custom purple theme with dark/light mode support and smooth animations
 - **Global Installation:** npm global installation support with CLI commands (`promptzy`, `prompt-dashboard`, `ai-prompt-dashboard`)
@@ -42,6 +48,7 @@
   - Cloud-only storage for reliable data persistence
   - UUID validation and proper error handling
 - **AI Integration:** Pollinations.ai API with streaming responses
+- **PWA Features:** Vite PWA plugin with Workbox for service worker and caching
 - **Notifications:** Sonner + custom toast hook for user feedback
 - **Theming:** Next-Themes for dark/light mode with custom animations
 - **Icons:** Lucide React (consistent icon system)
@@ -134,10 +141,13 @@ For detailed deployment instructions, see the [DEPLOYMENT.md](DEPLOYMENT.md) gui
 - **✅ Storage Simplified:** Removed localStorage and sync functionality - now uses Supabase-only storage for reliability
 - **✅ Sync Issues Resolved:** Eliminated prompt duplication and cross-browser sync problems by removing hybrid storage
 - **✅ Global CLI Support:** Added npm global installation with `promptzy`, `prompt-dashboard` and `ai-prompt-dashboard` commands
+- **✅ Progressive Web App:** Added PWA functionality for mobile app installation directly from browser
+- **✅ Mobile Responsive:** Fixed mobile layout issues with header, buttons, and AI assistant panel
+- **✅ Clean Settings:** Removed default Supabase credentials - settings form now starts blank
 - **Authentication:** User prefers login-based authentication system with multiple options (Google, GitHub, email/password) over anonymous user IDs
 - **✅ Cloud Operations:** All CRUD operations now properly update Supabase database with proper error handling
 - **✅ Rebranded to Promptzy:** Updated from "AI Prompt Dashboard" to "Promptzy" with cute new branding and logo
-- **✅ Version Updated:** Current version 1.2.0 with improved stability and user experience
+- **✅ Version Updated:** Current version 1.3.0 with PWA functionality and mobile optimization
 
 ## 🔮 Future Enhancements
 

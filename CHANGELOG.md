@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2025-05-28
+
+### Added
+- **📱 Progressive Web App (PWA):** Complete PWA implementation with service worker and offline functionality
+- **🏠 Mobile App Installation:** Users can now install Promptzy as a mobile app directly from their browser
+- **📲 Native App Experience:** PWA provides native app-like experience with no browser UI when installed
+- **🔄 Auto-Updates:** Service worker automatically updates the app when new versions are deployed
+- **💾 Offline Functionality:** Basic app functionality works offline with intelligent caching
+- **🎨 App Manifest:** Professional app manifest with proper branding and icons
+- **📱 Mobile Responsive Design:** Complete mobile layout optimization for all screen sizes
+- **🎯 Touch-Optimized UI:** Improved touch targets and mobile-friendly interactions
+
+### Changed
+- **📱 Header Layout:** Mobile header now stacks vertically with full-width responsive buttons
+- **🤖 AI Assistant Panel:** Optimized for mobile with proper sizing and responsive content
+- **🔘 Button Responsiveness:** Buttons now hide text on very small screens while keeping icons
+- **📐 Custom Breakpoints:** Added `xs: 475px` Tailwind breakpoint for better mobile control
+- **⚙️ Settings Form:** Removed pre-filled default Supabase credentials - now starts completely blank
+- **🎨 Mobile Typography:** Responsive text sizing throughout the application
+
+### Fixed
+- **📱 Mobile Header Overlap:** Settings button no longer covers title text on mobile
+- **🔘 Button Sizing:** Add Prompt button now fits properly on mobile screens
+- **🤖 AI Assistant Mobile:** Panel now fits correctly on mobile devices
+- **📝 Form Defaults:** Settings form no longer shows old database info by default
+- **🎯 Touch Targets:** All interactive elements now have proper touch target sizes
+
+### Technical
+- **🔧 Vite PWA Plugin:** Added vite-plugin-pwa with Workbox for service worker generation
+- **📦 Build Process:** Enhanced build process to generate PWA assets automatically
+- **🎨 Tailwind Config:** Extended with custom breakpoints and responsive utilities
+- **📱 Manifest Generation:** Automatic web app manifest generation with proper metadata
+
 ## [1.2.0] - 2025-05-26
 
 ### Added

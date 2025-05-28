@@ -32,6 +32,7 @@
   - Cloud sync with Supabase for cross-device access
   - Optional hybrid mode to sync between both
 - **AI Assistant**: Generate new prompt ideas with AI help
+- **Progressive Web App (PWA)**: Install as a mobile app directly from your browser
 - **Modern UI**: Clean, responsive interface built with Shadcn/UI and Tailwind
 
 ## 🖥️ Screenshots
@@ -87,6 +88,27 @@ bun run dev
 # or
 yarn dev
 ```
+
+### 📱 Mobile App Installation (PWA)
+
+Promptzy can be installed as a mobile app directly from your browser! No app store needed.
+
+**On Mobile (iOS/Android):**
+1. Visit the Promptzy website in your mobile browser
+2. Look for "Add to Home Screen" or "Install App" popup
+3. Tap "Install" or "Add"
+4. Promptzy will appear on your home screen like a native app!
+
+**On Desktop (Chrome/Edge):**
+1. Visit the website
+2. Look for the install icon in the address bar
+3. Click to install as a desktop app
+
+**Benefits of the Mobile App:**
+- 📱 Native app experience with no browser UI
+- ⚡ Faster loading and offline functionality
+- 🔄 Automatic updates when new versions are released
+- 🏠 Easy access from your home screen
 
 ### Deployment
 
@@ -158,6 +180,7 @@ This bidirectional sync ensures your prompts are available across devices and yo
 - TanStack Query
 - React Hook Form with Zod
 - Supabase for auth and storage
+- PWA (Progressive Web App) with Workbox
 - Cloudflare Pages for deployment
 
 ## 📋 Roadmap
