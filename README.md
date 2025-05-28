@@ -1,16 +1,16 @@
-# 🪄 AI Prompt Dashboard ✨
+# ✨ Promptzy 🎯
 
 <p align="center">
-  <img src="https://res.cloudinary.com/di7ctlowx/image/upload/v1748230916/icon_xgilb8.png" alt="Dashboard Icon" width="250" />
+  <img src="./public/promptzy-logo.png" alt="Promptzy Logo" width="200" />
 </p>
 
-A modern web application for managing and organizing your AI prompts, with tagging, search, and cloud synchronization.
+**Promptzy** - A modern, cute web application for managing and organizing your AI prompts, with tagging, search, and cloud storage.
 
 <div align="center">
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-1.1.0-green.svg)
-![NPM](https://img.shields.io/npm/v/@pinkpixel/ai-prompt-dashboard?color=red)
+![Version](https://img.shields.io/badge/version-1.2.0-green.svg)
+![NPM](https://img.shields.io/npm/v/@pinkpixel/promptzy?color=red)
 ![React](https://img.shields.io/badge/React-19.1.0-61DAFB?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?logo=typescript)
 ![Vite](https://img.shields.io/badge/Vite-5.4.19-646CFF?logo=vite)
@@ -46,31 +46,32 @@ Install globally from npm and run with a single command:
 
 ```bash
 # Install globally
-npm install -g @pinkpixel/ai-prompt-dashboard
+npm install -g @pinkpixel/promptzy
 
-# Run the dashboard
-prompt-dashboard
+# Run Promptzy
+promptzy
 ```
 
-The dashboard will start on `http://localhost:4173` and open automatically in your browser!
+Promptzy will start on `http://localhost:4173` and open automatically in your browser!
 
 **Alternative commands:**
 ```bash
-# You can also use the full name
+# Legacy commands still work
+prompt-dashboard
 ai-prompt-dashboard
 
 # Or run directly with npx (no installation needed)
-npx @pinkpixel/ai-prompt-dashboard
+npx @pinkpixel/promptzy
 ```
 
 ### Local Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/pinkpixel-dev/ai-prompt-dashboard.git
+git clone https://github.com/pinkpixel-dev/promptzy.git
 
 # Navigate to the project directory
-cd prompt-dashboard
+cd promptzy
 
 # Install dependencies (choose one)
 npm install
@@ -104,9 +105,9 @@ To use cloud storage features:
 1. Create a Supabase account and project at [supabase.com](https://supabase.com)
 2. Configure your Supabase credentials:
 
-   - Open the Prompt Dashboard
+   - Open Promptzy
    - Go to Settings (gear icon)
-   - Select "Supabase" or "Both" as your storage option
+   - Select "Supabase" as your storage option
    - Enter your Supabase Project URL and API Key
      - Find these in your Supabase dashboard under Project Settings → API
    - Click "Connect" to verify your credentials
@@ -116,7 +117,7 @@ To use cloud storage features:
    - Click the "Open SQL Editor" button in the settings
    - Copy the SQL code provided in the settings (or use the SQL from `supabase-setup.sql`)
    - Paste and run it in the Supabase SQL Editor
-4. Return to the Prompt Dashboard and click "Connect" again to verify the table setup
+4. Return to Promptzy and click "Connect" again to verify the table setup
 5. Save your settings
 
    **Note:** Automatic table creation isn't supported by Supabase for security reasons, so this one-time manual setup is required.

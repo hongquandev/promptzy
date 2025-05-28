@@ -13,8 +13,8 @@ const Header: React.FC<HeaderProps> = ({ onAddPrompt }) => {
   return (
     <header className="flex justify-between items-center mb-8">
       <div className="flex items-center gap-2">
-        <img src="/favicon.png" alt="Logo" className="w-8 h-8" />
-        <h1 className="text-2xl font-bold">AI Prompt Dashboard</h1>
+        <img src="/favicon.png" alt="Logo" className="w-12 h-12" />
+        <h1 className="text-3xl font-bold">Promptzy</h1>
       </div>
       <div className="flex gap-2">
         <Button
@@ -28,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({ onAddPrompt }) => {
         </Button>
         <Button
           onClick={onAddPrompt}
-          className="bg-purple-500 hover:bg-purple-700 flex items-center gap-1"
+          className="bg-purple-600 hover:bg-purple-700 flex items-center gap-1"
         >
           <Plus className="h-4 w-4" />
           Add Prompt

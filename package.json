@@ -1,7 +1,7 @@
 {
-  "name": "@pinkpixel/ai-prompt-dashboard",
-  "version": "1.1.1",
-  "description": "A modern web application for managing and organizing your AI prompts, with tagging, search, and cloud synchronization.",
+  "name": "@pinkpixel/promptzy",
+  "version": "1.2.0",
+  "description": "Promptzy - A modern, cute web application for managing and organizing your AI prompts, with tagging, search, and cloud storage.",
   "type": "module",
   "main": "dist/index.html",
   "files": [
@@ -12,11 +12,13 @@
     "CHANGELOG.md"
   ],
   "keywords": [
+    "promptzy",
     "ai",
     "prompts",
-    "dashboard",
     "prompt-management",
     "ai-tools",
+    "cute",
+    "modern",
     "supabase",
     "react",
     "typescript",
@@ -31,15 +33,16 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pinkpixel-dev/prompt-dashboard.git"
+    "url": "https://github.com/pinkpixel-dev/promptzy.git"
   },
-  "homepage": "https://github.com/pinkpixel-dev/prompt-dashboard#readme",
+  "homepage": "https://github.com/pinkpixel-dev/promptzy#readme",
   "bugs": {
-    "url": "https://github.com/pinkpixel-dev/prompt-dashboard/issues"
+    "url": "https://github.com/pinkpixel-dev/promptzy/issues"
   },
   "bin": {
-    "prompt-dashboard": "./bin/prompt-dashboard.js",
-    "ai-prompt-dashboard": "./bin/prompt-dashboard.js"
+    "promptzy": "./bin/promptzy.js",
+    "prompt-dashboard": "./bin/promptzy.js",
+    "ai-prompt-dashboard": "./bin/promptzy.js"
   },
   "scripts": {
     "dev": "vite",
@@ -47,7 +50,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "node bin/prompt-dashboard.js",
+    "start": "node bin/promptzy.js",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

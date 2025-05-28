@@ -1,11 +1,29 @@
 # Changelog
 
-All notable changes to the Prompt Dashboard project will be documented in this file.
+All notable changes to Promptzy will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.2.0] - 2025-05-26
+
+### Added
+- **🎯 Rebranded to Promptzy:** Complete rebrand from "AI Prompt Dashboard" to "Promptzy"
+- **✨ New Cute Logo:** Added adorable mascot-style logo for better brand recognition
+- **🚀 Enhanced CLI:** Primary CLI command is now `promptzy` (legacy commands still work)
+- **📦 New Package Name:** Published as `@pinkpixel/promptzy` on npm
+
+### Changed
+- Updated all documentation to reflect Promptzy branding
+- Enhanced package.json with new repository URLs and package name
+- Improved CLI banner with Promptzy branding
+- Updated README with new installation instructions
+
+### Fixed
+- All references to old package name updated
+- Repository URLs updated to new GitHub location
 
 ## [1.1.0] - 2025-05-26
 

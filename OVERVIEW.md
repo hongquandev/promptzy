@@ -1,10 +1,10 @@
-# 🚀 AI Prompt Dashboard
+# ✨ Promptzy 🎯
 
 **Last Updated:** 2025-05-26T03:58:56.920Z
 
 ## Project Overview
 
-The AI Prompt Dashboard is a modern Vite-based React application for managing, organizing, and utilizing AI prompts. It serves as a centralized repository where users can create, edit, categorize, and quickly access their collection of prompts across devices. The application supports global npm installation with CLI commands for easy deployment and usage.
+**Promptzy** is a modern Vite-based React application for managing, organizing, and utilizing AI prompts. It serves as a centralized repository where users can create, edit, categorize, and quickly access their collection of prompts across devices. The application supports global npm installation with CLI commands for easy deployment and usage.
 
 ## ✨ Key Features
 
@@ -25,7 +25,7 @@ The AI Prompt Dashboard is a modern Vite-based React application for managing, o
   - Empty state handling for filtered and unfiltered views
 - **Settings & Configuration:** Comprehensive settings dialog with Supabase connection testing and system prompt management
 - **Theming & Responsive Design:** Custom purple theme with dark/light mode support and smooth animations
-- **Global Installation:** npm global installation support with CLI commands (`prompt-dashboard`, `ai-prompt-dashboard`)
+- **Global Installation:** npm global installation support with CLI commands (`promptzy`, `prompt-dashboard`, `ai-prompt-dashboard`)
 - **Production Ready:** Cloudflare Pages deployment with automated CI/CD and proper SPA routing
 
 ## 🛠️ Technical Stack
@@ -61,7 +61,7 @@ The AI Prompt Dashboard is a modern Vite-based React application for managing, o
 ## 📁 Project Structure
 
 ```
-prompt-dashboard/
+promptzy/
 ├── public/                 # Static assets
 │   └── _routes.json        # SPA routing configuration for Cloudflare Pages
 ├── src/                    # Source code
@@ -99,11 +99,12 @@ prompt-dashboard/
 ### Global Installation (Recommended)
 ```bash
 # Install globally from npm
-npm install -g @pinkpixel/ai-prompt-dashboard
+npm install -g @pinkpixel/promptzy
 
-# Run the dashboard
+# Run Promptzy
+promptzy
+# or (legacy commands)
 prompt-dashboard
-# or
 ai-prompt-dashboard
 ```
 
@@ -132,10 +133,11 @@ For detailed deployment instructions, see the [DEPLOYMENT.md](DEPLOYMENT.md) gui
 
 - **✅ Storage Simplified:** Removed localStorage and sync functionality - now uses Supabase-only storage for reliability
 - **✅ Sync Issues Resolved:** Eliminated prompt duplication and cross-browser sync problems by removing hybrid storage
-- **✅ Global CLI Support:** Added npm global installation with `prompt-dashboard` and `ai-prompt-dashboard` commands
+- **✅ Global CLI Support:** Added npm global installation with `promptzy`, `prompt-dashboard` and `ai-prompt-dashboard` commands
 - **Authentication:** User prefers login-based authentication system with multiple options (Google, GitHub, email/password) over anonymous user IDs
 - **✅ Cloud Operations:** All CRUD operations now properly update Supabase database with proper error handling
-- **✅ Version Updated:** Current version 1.1.1 with improved stability and user experience
+- **✅ Rebranded to Promptzy:** Updated from "AI Prompt Dashboard" to "Promptzy" with cute new branding and logo
+- **✅ Version Updated:** Current version 1.2.0 with improved stability and user experience
 
 ## 🔮 Future Enhancements
 
