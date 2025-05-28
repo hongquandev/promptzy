@@ -29,13 +29,12 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   isOpen,
   onClose
 }) => {
-  // Pre-load default Supabase credentials to allow saving settings without re-entry
-  const { supabaseUrl: defaultSupabaseUrl, supabaseKey: defaultSupabaseKey } = getSupabaseCredentials();
+  // Only load custom Supabase credentials if they exist, otherwise start with blank form
   const [supabaseUrl, setSupabaseUrl] = useState<string>(() => {
-    return localStorage.getItem('custom-supabase-url') || defaultSupabaseUrl;
+    return localStorage.getItem('custom-supabase-url') || '';
   });
   const [supabaseKey, setSupabaseKey] = useState<string>(() => {
-    return localStorage.getItem('custom-supabase-key') || defaultSupabaseKey;
+    return localStorage.getItem('custom-supabase-key') || '';
   });
   const [customUserId, setCustomUserIdState] = useState<string>(() => {
     return localStorage.getItem('custom-user-id') || '';

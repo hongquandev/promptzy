@@ -225,7 +225,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
   };
 
   return (
-    <div className="fixed bottom-8 right-8 z-50 w-full max-w-md">
+    <div className="fixed bottom-4 sm:bottom-8 right-4 sm:right-8 left-4 sm:left-auto z-50 w-auto sm:w-full sm:max-w-md">
       <Collapsible
         open={isOpen}
         onOpenChange={setIsOpen}
@@ -242,37 +242,37 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
             {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="p-4 space-y-4">
+        <CollapsibleContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
           <div className="space-y-2">
-            <label htmlFor="promptType" className="text-sm font-medium text-muted-foreground">
+            <label htmlFor="promptType" className="text-xs sm:text-sm font-medium text-muted-foreground">
               What type of prompt do you want to generate?
             </label>
             <RadioGroup
               value={promptType}
               onValueChange={(value) => setPromptType(value as "system" | "task" | "image" | "video")}
-              className="flex space-x-4"
+              className="flex flex-wrap gap-2 sm:space-x-4 sm:gap-0"
             >
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 <RadioGroupItem value="system" id="system" />
-                <Label htmlFor="system">System Prompt</Label>
+                <Label htmlFor="system" className="text-xs sm:text-sm">System</Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 <RadioGroupItem value="task" id="task" />
-                <Label htmlFor="task">Task Prompt</Label>
+                <Label htmlFor="task" className="text-xs sm:text-sm">Task</Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 <RadioGroupItem value="image" id="image" />
-                <Label htmlFor="image">Image Prompt</Label>
+                <Label htmlFor="image" className="text-xs sm:text-sm">Image</Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 <RadioGroupItem value="video" id="video" />
-                <Label htmlFor="video">Video Prompt</Label>
+                <Label htmlFor="video" className="text-xs sm:text-sm">Video</Label>
               </div>
             </RadioGroup>
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="prompt" className="text-sm font-medium text-muted-foreground">
+            <label htmlFor="prompt" className="text-xs sm:text-sm font-medium text-muted-foreground">
               {promptType === "system"
                 ? "Describe the AI assistant's role and personality"
                 : promptType === "task"
@@ -294,7 +294,7 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
               }
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              className="min-h-[80px] bg-secondary/50 border-secondary"
+              className="min-h-[60px] sm:min-h-[80px] bg-secondary/50 border-secondary text-xs sm:text-sm"
             />
           </div>
 
@@ -307,23 +307,23 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
           </Button>
 
           {response.text && (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <div
                 ref={responseRef}
-                className="bg-secondary p-3 rounded-md max-h-[200px] overflow-y-auto whitespace-pre-wrap text-sm"
+                className="bg-secondary p-2 sm:p-3 rounded-md max-h-[150px] sm:max-h-[200px] overflow-y-auto whitespace-pre-wrap text-xs sm:text-sm"
               >
                 {response.text}
               </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 text-xs sm:text-sm"
                   onClick={handleCopyResponse}
                 >
-                  <Copy className="mr-2 h-4 w-4" /> Copy
+                  <Copy className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Copy
                 </Button>
                 <Button
-                  className="flex-1 bg-purple-500 hover:bg-purple-700"
+                  className="flex-1 bg-purple-500 hover:bg-purple-700 text-xs sm:text-sm"
                   onClick={handleUsePrompt}
                 >
                   Use as Prompt
