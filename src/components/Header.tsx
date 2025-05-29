@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Settings, RefreshCw } from "lucide-react";
 import SettingsDialog from "@/components/SettingsDialog";
+import AnimatedLogo from "@/components/AnimatedLogo";
 
 interface HeaderProps {
   onAddPrompt: () => void;
@@ -15,7 +16,7 @@ const Header: React.FC<HeaderProps> = ({ onAddPrompt, onRefreshPrompts, isRefres
   return (
     <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4 sm:gap-0">
       <div className="flex items-center gap-2">
-        <img src="/favicon.png" alt="Logo" className="w-10 h-10 sm:w-12 sm:h-12" />
+        <AnimatedLogo />
         <h1 className="text-2xl sm:text-3xl font-bold">Promptzy</h1>
       </div>
       <div className="flex gap-2 w-full sm:w-auto">

@@ -6,32 +6,32 @@
   :root {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
-    
+
     --card: 240 10% 3.9%;
     --card-foreground: 0 0% 98%;
-    
+
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
-    
+
     --primary: 252 79% 65%;
     --primary-foreground: 0 0% 98%;
-    
+
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
-    
+
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
-    
+
     --accent: 240 3.7% 15.9%;
     --accent-foreground: 0 0% 98%;
-    
+
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    
+
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 252 79% 65%;
-    
+
     --radius: 0.75rem;
   }
 }
@@ -40,11 +40,11 @@
   * {
     @apply border-border selection:bg-purple-300/20 selection:text-white;
   }
-  
+
   body {
     @apply bg-background text-foreground antialiased;
   }
-  
+
   .glass {
     @apply bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl;
   }
@@ -53,28 +53,65 @@
     @apply bg-gradient-to-br from-secondary to-secondary/80;
     @apply transition-all duration-300;
   }
-  
+
   .prompt-card:hover {
     @apply from-secondary/90 to-secondary/60;
   }
-  
+
   .tag {
     @apply bg-purple-300/20 text-purple-300 text-xs px-2 py-1 rounded-full;
     @apply transition-all duration-200 hover:bg-purple-300/30;
   }
-  
+
   .tag-active {
     @apply bg-purple-300 text-black;
   }
-  
+
   .btn-hover-effect {
     @apply relative overflow-hidden;
   }
-  
+
+  /* Robot Logo Animations */
+  .robot-logo-container {
+    @apply transition-transform duration-300 ease-in-out;
+  }
+
+  .robot-logo-container:hover {
+    animation: robotBounce 0.6s ease-in-out;
+  }
+
+  .robot-logo {
+    @apply transition-all duration-300 ease-in-out;
+    filter: drop-shadow(0 0 0 transparent);
+  }
+
+  .robot-logo-container:hover .robot-logo {
+    filter: drop-shadow(0 0 8px rgba(126, 105, 171, 0.6));
+    transform: scale(1.1);
+  }
+
+  @keyframes robotBounce {
+    0% { transform: translateY(0) rotate(0deg) scale(1); }
+    25% { transform: translateY(-8px) rotate(-5deg) scale(1.05); }
+    50% { transform: translateY(-4px) rotate(3deg) scale(1.1); }
+    75% { transform: translateY(-6px) rotate(-2deg) scale(1.05); }
+    100% { transform: translateY(0) rotate(0deg) scale(1); }
+  }
+
+  /* Add a subtle pulse effect for extra cuteness */
+  .robot-logo-container:hover {
+    animation: robotBounce 0.6s ease-in-out, robotPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes robotPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+
   .btn-hover-effect:after {
     @apply content-[''] absolute inset-0 bg-white/0 transition-colors duration-300 pointer-events-none;
   }
-  
+
   .btn-hover-effect:hover:after {
     @apply bg-white/10;
   }

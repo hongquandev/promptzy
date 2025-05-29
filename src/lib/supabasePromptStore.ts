@@ -166,10 +166,11 @@ export const getCurrentUserId = async (): Promise<string> => {
 };
 
 export const getPromptsFromSupabase = async (): Promise<Prompt[]> => {
-  const client = supabaseClient;
+  // Create a fresh client to ensure we have the latest credentials
+  const client = createClient(getSupabaseCredentials().supabaseUrl, getSupabaseCredentials().supabaseKey);
 
   try {
-    console.log("Fetching prompts from Supabase...");
+    console.log("Fetching prompts from Supabase with fresh client...");
     const tableReady = await ensurePromptsTable(client);
     if (!tableReady) {
       console.error("Prompts table is not available");

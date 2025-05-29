@@ -36,6 +36,7 @@ const Index = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [supabaseConnected, setSupabaseConnected] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
   const { toast } = useToast();
 
   // Delete confirmation state
@@ -83,7 +84,7 @@ const Index = () => {
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsLoggedIn(!!session);
       checkSupabaseConnection();
     });
@@ -94,10 +95,10 @@ const Index = () => {
   }, [checkSupabaseConnection]);
 
   // Function to load prompts from Supabase (extracted for reuse)
-  const loadPrompts = useCallback(async () => {
-    console.log("Loading prompts from Supabase, connected:", supabaseConnected);
+  const loadPrompts = useCallback(async (forceRefresh = false) => {
+    console.log("Loading prompts from Supabase, connected:", supabaseConnected, "forceRefresh:", forceRefresh);
 
-    if (!supabaseConnected) {
+    if (!supabaseConnected && !forceRefresh) {
       console.log("Supabase not connected, skipping prompt load");
       return;
     }
@@ -113,6 +114,9 @@ const Index = () => {
         new Map(tagsFromSupabase.map(tag => [tag.id, tag])).values()
       );
       setAllTags(uniqueTags);
+
+      // Force a re-render by updating a timestamp or counter
+      console.log("Prompts state updated with", supabasePrompts.length, "prompts");
     } catch (error) {
       console.error("Error loading prompts from Supabase:", error);
       toast({
@@ -131,12 +135,19 @@ const Index = () => {
   // Function to handle manual refresh
   const handleRefreshPrompts = useCallback(async () => {
     setIsRefreshing(true);
+    console.log("Manual refresh triggered");
 
     try {
+      // Clear current prompts to show loading state
+      setPrompts([]);
+      setAllTags([]);
+
       // Re-check Supabase connection first
+      console.log("Checking Supabase connection...");
       const isConnected = await checkSupabaseConnection();
 
       if (!isConnected) {
+        console.log("Connection check failed");
         toast({
           title: "Connection Failed",
           description: "Could not connect to Supabase. Please check your settings.",
@@ -145,8 +156,15 @@ const Index = () => {
         return;
       }
 
-      // Load prompts if connected
-      await loadPrompts();
+      console.log("Connection successful, loading prompts...");
+      // Force refresh prompts regardless of connection state
+      await loadPrompts(true);
+
+      // Add a small delay to ensure state updates are processed
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Force a re-render by updating the refresh key
+      setRefreshKey(prev => prev + 1);
 
       toast({
         title: "Prompts Refreshed",
@@ -339,7 +357,7 @@ const Index = () => {
   }, [filteredPrompts, colCount]);
 
   return (
-    <div className="container mx-auto py-8 px-4 min-h-screen max-w-5xl">
+    <div key={refreshKey} className="container mx-auto py-8 px-4 min-h-screen max-w-5xl">
       <Header
         onAddPrompt={handleAddPrompt}
         onRefreshPrompts={handleRefreshPrompts}

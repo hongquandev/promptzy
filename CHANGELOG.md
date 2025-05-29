@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **🔄 Smart Connection Check:** Refresh function re-validates Supabase connection before loading prompts
 - **✨ Loading States:** Visual feedback with spinning icon and disabled button during refresh operation
 - **📢 User Feedback:** Toast notifications for refresh success, failure, and connection issues
+- **🤖 Animated Robot Logo:** Added cute hover animation and robot sound effect to the Promptzy logo
+- **🎵 Interactive Sound:** Robot logo plays a fun sound effect when hovered for enhanced user experience
+- **✨ Bouncy Animation:** Logo bounces, rotates, and glows with purple shadow on hover
 
 ### Changed
 - **🎨 Header Layout:** Refresh button positioned between logo and settings for easy access

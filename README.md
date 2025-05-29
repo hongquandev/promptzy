@@ -1,7 +1,7 @@
 # ✨ Promptzy 🎯
 
 <p align="center">
-  <img src="https://res.cloudinary.com/di7ctlowx/image/upload/v1748393462/icon_lzh8zy.png" alt="Promptzy Logo" width="200" />
+  <img src="https://res.cloudinary.com/di7ctlowx/image/upload/v1748393462/icon_lzh8zy.png" alt="Promptzy Logo" width="250" height="250" />
 </p>
 
 **Promptzy** - A modern, cute web application for managing and organizing your AI prompts, with tagging, search, and cloud storage.
@@ -9,7 +9,7 @@
 <div align="center">
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-1.3.1-green.svg)
+![Version](https://img.shields.io/badge/version-1.3.2-green.svg)
 ![NPM](https://img.shields.io/npm/v/@pinkpixel/promptzy?color=red)
 ![React](https://img.shields.io/badge/React-19.1.0-61DAFB?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?logo=typescript)
@@ -35,7 +35,9 @@
 
 ## 🖥️ Screenshots
 
-*Coming soon*
+<p align="center">
+  <img src="https://res.cloudinary.com/di7ctlowx/image/upload/v1748492164/dashboard_c6krgr.png" alt="Screenshot" width="800" />
+</p>
 
 ## 🛠️ Installation
 
