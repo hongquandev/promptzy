@@ -5,7 +5,24 @@ All notable changes to Promptzy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.3.1]
+
+### Added
+- **🔄 Refresh Prompts Button:** Added manual refresh button in header for both web and mobile PWA
+- **📱 Mobile PWA Sync:** Refresh button specifically addresses mobile PWA prompt loading after Supabase configuration
+- **🔄 Smart Connection Check:** Refresh function re-validates Supabase connection before loading prompts
+- **✨ Loading States:** Visual feedback with spinning icon and disabled button during refresh operation
+- **📢 User Feedback:** Toast notifications for refresh success, failure, and connection issues
+
+### Changed
+- **🎨 Header Layout:** Refresh button positioned between logo and settings for easy access
+- **📱 Responsive Design:** Refresh button adapts to mobile with proper touch targets and responsive text
+- **⚡ Performance:** Extracted prompt loading logic into reusable function for better code organization
+
+### Fixed
+- **📱 Mobile PWA Issue:** Prompts now properly load after entering Supabase credentials on mobile app
+- **🔄 Cross-Device Sync:** Manual refresh ensures prompts appear when switching devices or browsers
+- **🔗 Connection Reliability:** Refresh validates connection before attempting to load data
 
 ## [1.3.0] - 2025-05-28
 

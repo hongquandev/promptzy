@@ -9,7 +9,7 @@
 <div align="center">
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-1.2.0-green.svg)
+![Version](https://img.shields.io/badge/version-1.3.1-green.svg)
 ![NPM](https://img.shields.io/npm/v/@pinkpixel/promptzy?color=red)
 ![React](https://img.shields.io/badge/React-19.1.0-61DAFB?logo=react)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-3178C6?logo=typescript)
@@ -27,10 +27,8 @@
 - **Organize AI Prompts**: Store, edit, and categorize prompts for various AI models
 - **Custom Tagging**: Organize prompts with custom tags for easy retrieval
 - **Powerful Search**: Find the perfect prompt with full-text search and tag filtering
-- **Dual Storage**:
-  - Store prompts locally in your browser
-  - Cloud sync with Supabase for cross-device access
-  - Optional hybrid mode to sync between both
+- **Cloud Storage**: Reliable Supabase cloud storage with cross-device sync
+- **Refresh Prompts**: Manual refresh button to sync prompts after configuration changes
 - **AI Assistant**: Generate new prompt ideas with AI help
 - **Progressive Web App (PWA)**: Install as a mobile app directly from your browser
 - **Modern UI**: Clean, responsive interface built with Shadcn/UI and Tailwind
@@ -109,6 +107,7 @@ Promptzy can be installed as a mobile app directly from your browser! No app sto
 - ⚡ Faster loading and offline functionality
 - 🔄 Automatic updates when new versions are released
 - 🏠 Easy access from your home screen
+- 🔄 Manual refresh button for syncing prompts after setup
 
 ### Deployment
 
@@ -141,8 +140,9 @@ To use cloud storage features:
    - Paste and run it in the Supabase SQL Editor
 4. Return to Promptzy and click "Connect" again to verify the table setup
 5. Save your settings
+6. Use the "Refresh" button in the header to load your prompts
 
-   **Note:** Automatic table creation isn't supported by Supabase for security reasons, so this one-time manual setup is required.
+   **Note:** Automatic table creation isn't supported by Supabase for security reasons, so this one-time manual setup is required. After setup, use the refresh button to ensure prompts load properly, especially on mobile devices.
 
 The application will now use your Supabase instance for cloud storage!
 
@@ -165,11 +165,12 @@ This bidirectional sync ensures your prompts are available across devices and yo
 ## 📖 Usage
 
 1. Launch the application
-2. Choose your storage preference (local, Supabase, or both)
-3. Add prompts with the "+" button
-4. Assign tags to organize your prompts
-5. Use the search box and tag filters to find prompts
-6. Select a prompt to copy it or edit its details
+2. Configure your Supabase connection in Settings
+3. Use the "Refresh" button to load your prompts after setup
+4. Add prompts with the "+" button
+5. Assign tags to organize your prompts
+6. Use the search box and tag filters to find prompts
+7. Select a prompt to copy it or edit its details
 
 ## 🧩 Tech Stack
 

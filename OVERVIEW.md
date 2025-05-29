@@ -1,6 +1,6 @@
 # ✨ Promptzy 🎯
 
-**Last Updated:** 2025-05-28T01:47:10.617Z
+**Last Updated:** 2025-05-29T03:05:39.954Z
 
 ## Project Overview
 
@@ -12,6 +12,7 @@
 - **Prompt Types:** Support for system, task, image, and video prompts with type-specific badges
 - **Tagging System:** Organize prompts with customizable tags and visual tag chips
 - **Search & Filter:** Full-text search and tag-based filtering with responsive masonry layout
+- **Manual Refresh:** Dedicated refresh button in header for syncing prompts after configuration changes
 - **AI Assistant:** Generate new prompt ideas using Pollinations.ai API with streaming responses and collapsible interface
 - **Cloud Storage:**
   - Supabase-only storage for reliable cloud persistence
@@ -29,6 +30,7 @@
   - Service worker for offline functionality and caching
   - Native app experience with no browser UI
   - Auto-updates and home screen installation
+  - Manual refresh button for mobile PWA sync after Supabase setup
 - **Settings & Configuration:** Comprehensive settings dialog with Supabase connection testing and system prompt management
 - **Theming & Responsive Design:** Custom purple theme with dark/light mode support and smooth animations
 - **Global Installation:** npm global installation support with CLI commands (`promptzy`, `prompt-dashboard`, `ai-prompt-dashboard`)
@@ -80,7 +82,7 @@ promptzy/
 │   │   ├── SearchInput.tsx      # Search input with icon
 │   │   ├── TagFilter.tsx        # Tag filtering buttons
 │   │   ├── EmptyState.tsx       # Contextual empty states
-│   │   ├── Header.tsx           # App header with settings
+│   │   ├── Header.tsx           # App header with refresh, settings, and add buttons
 │   │   ├── SettingsDialog.tsx   # Comprehensive settings modal
 │   │   └── ui/                  # Shadcn UI & Radix primitives (40+ components)
 │   ├── hooks/              # Custom React hooks (use-toast, use-mobile)
@@ -140,6 +142,7 @@ For detailed deployment instructions, see the [DEPLOYMENT.md](DEPLOYMENT.md) gui
 
 - **✅ Storage Simplified:** Removed localStorage and sync functionality - now uses Supabase-only storage for reliability
 - **✅ Sync Issues Resolved:** Eliminated prompt duplication and cross-browser sync problems by removing hybrid storage
+- **✅ Manual Refresh Button:** Added refresh button in header to solve mobile PWA sync issues after Supabase configuration
 - **✅ Global CLI Support:** Added npm global installation with `promptzy`, `prompt-dashboard` and `ai-prompt-dashboard` commands
 - **✅ Progressive Web App:** Added PWA functionality for mobile app installation directly from browser
 - **✅ Mobile Responsive:** Fixed mobile layout issues with header, buttons, and AI assistant panel
@@ -147,7 +150,7 @@ For detailed deployment instructions, see the [DEPLOYMENT.md](DEPLOYMENT.md) gui
 - **Authentication:** User prefers login-based authentication system with multiple options (Google, GitHub, email/password) over anonymous user IDs
 - **✅ Cloud Operations:** All CRUD operations now properly update Supabase database with proper error handling
 - **✅ Rebranded to Promptzy:** Updated from "AI Prompt Dashboard" to "Promptzy" with cute new branding and logo
-- **✅ Version Updated:** Current version 1.3.0 with PWA functionality and mobile optimization
+- **✅ Version Updated:** Current version 1.3.0+ with PWA functionality, mobile optimization, and refresh functionality
 
 ## 🔮 Future Enhancements
 

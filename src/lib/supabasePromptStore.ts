@@ -114,7 +114,7 @@ const getUserId = async (client: ReturnType<typeof createClient>): Promise<strin
     }
 
     // If no authenticated user, check for a custom user ID set by the user
-    let customUserId = localStorage.getItem('custom-user-id');
+    const customUserId = localStorage.getItem('custom-user-id');
     if (customUserId && customUserId.trim()) {
       console.log("Using custom user ID:", customUserId);
       return customUserId.trim();

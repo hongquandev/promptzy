@@ -35,6 +35,7 @@ const Index = () => {
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [supabaseConnected, setSupabaseConnected] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const { toast } = useToast();
 
   // Delete confirmation state
@@ -92,40 +93,76 @@ const Index = () => {
     };
   }, [checkSupabaseConnection]);
 
-  // Load prompts from Supabase
-  useEffect(() => {
-    const loadPrompts = async () => {
-      console.log("Loading prompts from Supabase, connected:", supabaseConnected);
+  // Function to load prompts from Supabase (extracted for reuse)
+  const loadPrompts = useCallback(async () => {
+    console.log("Loading prompts from Supabase, connected:", supabaseConnected);
 
-      if (!supabaseConnected) {
-        console.log("Supabase not connected, skipping prompt load");
+    if (!supabaseConnected) {
+      console.log("Supabase not connected, skipping prompt load");
+      return;
+    }
+
+    try {
+      const supabasePrompts = await getPromptsFromSupabase();
+      console.log(`Retrieved ${supabasePrompts.length} prompts from Supabase`);
+
+      setPrompts(supabasePrompts);
+      // Extract unique tags from prompts
+      const tagsFromSupabase = supabasePrompts.flatMap(p => p.tags);
+      const uniqueTags = Array.from(
+        new Map(tagsFromSupabase.map(tag => [tag.id, tag])).values()
+      );
+      setAllTags(uniqueTags);
+    } catch (error) {
+      console.error("Error loading prompts from Supabase:", error);
+      toast({
+        title: "Error loading prompts",
+        description: "Could not load prompts from Supabase. Please check your connection.",
+        variant: "destructive",
+      });
+    }
+  }, [supabaseConnected, toast]);
+
+  // Load prompts from Supabase on mount and connection changes
+  useEffect(() => {
+    loadPrompts();
+  }, [loadPrompts]);
+
+  // Function to handle manual refresh
+  const handleRefreshPrompts = useCallback(async () => {
+    setIsRefreshing(true);
+
+    try {
+      // Re-check Supabase connection first
+      const isConnected = await checkSupabaseConnection();
+
+      if (!isConnected) {
+        toast({
+          title: "Connection Failed",
+          description: "Could not connect to Supabase. Please check your settings.",
+          variant: "destructive",
+        });
         return;
       }
 
-      try {
-        const supabasePrompts = await getPromptsFromSupabase();
-        console.log(`Retrieved ${supabasePrompts.length} prompts from Supabase`);
+      // Load prompts if connected
+      await loadPrompts();
 
-        setPrompts(supabasePrompts);
-        // Extract unique tags from prompts
-        const tagsFromSupabase = supabasePrompts.flatMap(p => p.tags);
-        const uniqueTags = Array.from(
-          new Map(tagsFromSupabase.map(tag => [tag.id, tag])).values()
-        );
-        setAllTags(uniqueTags);
-      } catch (error) {
-        console.error("Error loading prompts from Supabase:", error);
-        toast({
-          title: "Error loading prompts",
-          description: "Could not load prompts from Supabase. Please check your connection.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    loadPrompts();
-  }, [supabaseConnected, toast, checkSupabaseConnection]);
-
+      toast({
+        title: "Prompts Refreshed",
+        description: "Successfully refreshed prompts from Supabase.",
+      });
+    } catch (error) {
+      console.error("Error refreshing prompts:", error);
+      toast({
+        title: "Refresh Failed",
+        description: "Could not refresh prompts. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [checkSupabaseConnection, loadPrompts, toast]);
 
   const handleAddPrompt = () => {
     setEditingPrompt(null);
@@ -305,6 +342,8 @@ const Index = () => {
     <div className="container mx-auto py-8 px-4 min-h-screen max-w-5xl">
       <Header
         onAddPrompt={handleAddPrompt}
+        onRefreshPrompts={handleRefreshPrompts}
+        isRefreshing={isRefreshing}
       />
 
       <div className="mb-8 space-y-6">

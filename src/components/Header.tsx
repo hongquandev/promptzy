@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Settings } from "lucide-react";
+import { Plus, Settings, RefreshCw } from "lucide-react";
 import SettingsDialog from "@/components/SettingsDialog";
 
 interface HeaderProps {
   onAddPrompt: () => void;
+  onRefreshPrompts: () => void;
+  isRefreshing: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ onAddPrompt }) => {
+const Header: React.FC<HeaderProps> = ({ onAddPrompt, onRefreshPrompts, isRefreshing }) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
@@ -17,6 +19,16 @@ const Header: React.FC<HeaderProps> = ({ onAddPrompt }) => {
         <h1 className="text-2xl sm:text-3xl font-bold">Promptzy</h1>
       </div>
       <div className="flex gap-2 w-full sm:w-auto">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onRefreshPrompts}
+          disabled={isRefreshing}
+          className="flex items-center gap-1 flex-1 sm:flex-none"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span className="hidden xs:inline">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+        </Button>
         <Button
           variant="outline"
           size="sm"
