@@ -1,5 +1,5 @@
 # Configuration for Cloudflare Pages
-name = "ai-prompt-dashboard"
+name = "promptzy"
 
 # The directory to deploy
 pages_build_output_dir = "dist"
