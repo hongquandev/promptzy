@@ -117,15 +117,14 @@ For deploying to Cloudflare Pages or other platforms, see the [DEPLOYMENT.md](DE
 
 ## 🔧 Configuration
 
-### Local Storage
-
-By default, the application uses browser localStorage - no configuration needed!
-
 ### Supabase Configuration
 
-To use cloud storage features:
+To use promptzy you will need to set up a table on Supabase. They have a free tier and the setup is very easy to do.
 
-1. Create a Supabase account and project at [supabase.com](https://supabase.com)
+1. Create a Supabase account and project at [supabase.com](https://supabase.com). Once you have an account set up, create a project. At the top of your project page, you should see a button that says "Connect." Click on that button, and then click on the 2nd tab. You should see a screen that gives you a supabase url, and an anon key. You can also find this information in your project settings, you will see a project id, and your anon key will be located in the api keys section.
+   
+Now that you have this information, return to Promptzy.
+
 2. Configure your Supabase credentials:
 
    - Open Promptzy
@@ -134,35 +133,21 @@ To use cloud storage features:
    - Enter your Supabase Project URL and API Key
      - Find these in your Supabase dashboard under Project Settings → API
    - Click "Connect" to verify your credentials
+     
 3. Create the required database table:
 
-   - After connecting, you'll need to set up the prompts table manually
+   - After connecting, you'll need to set up the prompts table manually. You should see the instructions appear after entering your credentials.
    - Click the "Open SQL Editor" button in the settings
    - Copy the SQL code provided in the settings (or use the SQL from `supabase-setup.sql`)
    - Paste and run it in the Supabase SQL Editor
+     
 4. Return to Promptzy and click "Connect" again to verify the table setup
 5. Save your settings
 6. Use the "Refresh" button in the header to load your prompts
 
-   **Note:** Automatic table creation isn't supported by Supabase for security reasons, so this one-time manual setup is required. After setup, use the refresh button to ensure prompts load properly, especially on mobile devices.
+   **Note:** Automatic table creation isn't supported by Supabase for security reasons, so this one-time manual setup is required. You should only have to do this once per browser. After setup, use the refresh button to ensure prompts load properly, especially on       mobile devices.
 
-The application will now use your Supabase instance for cloud storage!
-
-#### Synchronization Details
-
-When using the "Both" storage option:
-
-- New prompts are saved to both local storage and Supabase
-- When you open the application, it will:
-  1. Load local prompts first
-  2. Fetch prompts from Supabase
-  3. Merge them, preferring Supabase versions for duplicate IDs
-  4. Sync any unique local prompts to Supabase
-  5. Save any unique Supabase prompts to local storage
-
-This bidirectional sync ensures your prompts are available across devices and you always have a local backup.
-
-> **Note:** Cloud sync requires opening the application with the same Supabase configuration on all devices. Your storage preference is saved in your browser's localStorage.
+The application will now use your Supabase instance for cloud storage! The cloud storage is ideal because it allows you to access your prompt database from any browser, computer or mobile device, and with Supabase's free tier you will have plenty of storage space for your prompts.
 
 ## 📖 Usage
 
