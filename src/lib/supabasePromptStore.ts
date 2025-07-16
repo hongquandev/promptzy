@@ -59,8 +59,33 @@ DROP POLICY IF EXISTS "Temporary allow all" ON prompts;
 CREATE POLICY "Allow all operations for now" ON prompts FOR ALL USING (true);
 `;
 
-// Use a single Supabase client instance for all operations to prevent multiple instances
-const supabaseClient = supabase;
+// Cache for the current client to avoid creating multiple instances
+let cachedClient: ReturnType<typeof createClient> | null = null;
+let cachedCredentials: { url: string; key: string } | null = null;
+
+// Helper function to create a fresh client with current credentials
+const createFreshClient = () => {
+  const { supabaseUrl, supabaseKey } = getSupabaseCredentials();
+
+  // Check if we can reuse the cached client
+  if (cachedClient && cachedCredentials &&
+      cachedCredentials.url === supabaseUrl &&
+      cachedCredentials.key === supabaseKey) {
+    return cachedClient;
+  }
+
+  // Create new client and cache it
+  cachedClient = createClient(supabaseUrl, supabaseKey);
+  cachedCredentials = { url: supabaseUrl, key: supabaseKey };
+
+  return cachedClient;
+};
+
+// Function to clear the cached client (call when credentials change)
+export const clearClientCache = () => {
+  cachedClient = null;
+  cachedCredentials = null;
+};
 
 // Function to check if the prompts table exists
 export const checkTableExists = async (client: ReturnType<typeof createClient>): Promise<boolean> => {
@@ -161,7 +186,7 @@ export const setCustomUserId = (userId: string): boolean => {
 
 // Helper function to get the current user ID (for display purposes)
 export const getCurrentUserId = async (): Promise<string> => {
-  const client = supabaseClient;
+  const client = createFreshClient();
   return await getUserId(client);
 };
 
@@ -217,7 +242,7 @@ export const getPromptsFromSupabase = async (): Promise<Prompt[]> => {
 };
 
 export const savePromptToSupabase = async (prompt: Prompt): Promise<boolean> => {
-  const client = supabaseClient;
+  const client = createFreshClient();
 
   try {
     // Validate or regenerate prompt ID for proper UUID format
@@ -274,7 +299,7 @@ export const savePromptToSupabase = async (prompt: Prompt): Promise<boolean> => 
 };
 
 export const deletePromptFromSupabase = async (id: string): Promise<boolean> => {
-  const client = supabaseClient;
+  const client = createFreshClient();
 
   try {
     const tableReady = await ensurePromptsTable(client);

@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Settings, CheckCircle, AlertCircle, Sparkles, RefreshCw, Database as DatabaseIcon, Copy, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { testSupabaseConnection, checkTableExists, CREATE_TABLE_SQL, getSupabaseDiagnostics, setCustomUserId, getCurrentUserId } from "@/lib/supabasePromptStore";
+import { testSupabaseConnection, checkTableExists, CREATE_TABLE_SQL, getSupabaseDiagnostics, setCustomUserId, getCurrentUserId, clearClientCache } from "@/lib/supabasePromptStore";
 import { saveSystemPrompt, setUseDefaultPrompt, isUsingDefaultPrompt } from "@/lib/systemPromptStore";
 import { SYSTEM_PROMPT_DEFAULT } from "@/components/AIAssistant";
 import {
@@ -136,6 +136,9 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     // Save the credentials using our helper function
     const savedSuccessfully = saveSupabaseCredentials(supabaseUrl, supabaseKey);
 
+    // Clear the client cache so new credentials are used
+    clearClientCache();
+
     if (!savedSuccessfully) {
       toast({
         title: "Storage Error",
@@ -231,6 +234,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
     try {
       // Save the credentials temporarily for testing
       saveSupabaseCredentials(supabaseUrl, supabaseKey);
+      clearClientCache();
 
       // Run diagnostics
       const diagnostics = await getSupabaseDiagnostics();
@@ -302,6 +306,9 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 
       // Save Supabase credentials using our helper function
       const savedSuccessfully = saveSupabaseCredentials(supabaseUrl, supabaseKey);
+
+      // Clear the client cache so new credentials are used
+      clearClientCache();
 
       if (!savedSuccessfully) {
         toast({

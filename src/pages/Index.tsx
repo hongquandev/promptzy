@@ -23,10 +23,9 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
-// Create a fresh Supabase client to handle authentication
-const supabase = createSupabaseClient();
-
 const Index = () => {
+  // Create a fresh Supabase client to handle authentication (memoized to prevent recreation)
+  const supabase = useMemo(() => createSupabaseClient(), []);
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -92,7 +91,7 @@ const Index = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [checkSupabaseConnection]);
+  }, [checkSupabaseConnection, supabase.auth]);
 
   // Function to load prompts from Supabase (extracted for reuse)
   const loadPrompts = useCallback(async (forceRefresh = false) => {

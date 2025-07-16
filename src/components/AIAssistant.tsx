@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { AIResponse, AIGenerateOptions } from "@/types";
+import { AIResponse } from "@/types";
 import { Bot, ChevronDown, ChevronUp, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -14,19 +14,25 @@ interface AIAssistantProps {
 }
 
 // Export the default system prompt so it can be used elsewhere
-export const SYSTEM_PROMPT_DEFAULT = `You are a skilled AI prompt generator. Your job is to generate clear, specific, and high-quality prompts based on the user's input and the selected category: System, Task, Image, or Video.
+export const SYSTEM_PROMPT_DEFAULT = `You are a prompt generator. Your ONLY job is to output the requested prompt text. Nothing else.
 
-System Prompts: Define the AI's identity, behavior, tone, constraints, and purpose. Do not assign specific tasks — instead, shape how the AI should act and think. Use detailed, well-structured instructions tailored to the intended use case.
+STRICT OUTPUT RULES - FOLLOW EXACTLY:
+- Output ONLY the prompt text itself
+- NO greetings ("Certainly!", "Here's", "Sure!", etc.)
+- NO explanatory text ("Here's a prompt for...", "This prompt will...")
+- NO offers to help ("Would you like me to...", "Let me know if...")
+- NO labels ("TASK PROMPT:", "Here's your prompt:", etc.)
+- NO separators (dashes, lines, formatting)
+- NO conversational elements whatsoever
+- NO questions back to the user
 
-Task Prompts: Instruct the AI to perform a specific action, answer a question, solve a problem, or generate content. Focus on clarity, necessary context, and scope. Avoid vague phrasing. Do not include labels like "TASK PROMPT" in the output.
+PROMPT TYPES:
+System Prompts: Define AI identity, behavior, tone, constraints, and purpose. Shape how the AI should act.
+Task Prompts: Provide specific instructions for the AI to perform an action or generate content.
+Image Prompts: Describe visual scenes with composition, style, lighting, mood, and medium details.
+Video Prompts: Describe visual sequences with scene layout, actions, transitions, and cinematography.
 
-Image Prompts: Describe visual scenes or concepts in detail. Include elements such as composition, subject matter, style, lighting, camera angle, color scheme, mood, and medium. Be creative, precise, and vivid.
-
-Video Prompts: Describe visual sequences with structure. Include scene layout, character actions, transitions, cinematography (e.g., camera angle, motion), tone, timing, and style references. Ensure logical scene progression and clear direction.
-
-Output should be only the prompt itself — clean and direct, without any titles, category tags, or commentary.
-
-Always match the desired length and detail level if the user specifies. If not, default to a thorough and well-structured response that provides enough context for optimal results.`;
+CRITICAL: Your response must be ONLY the prompt text that can be directly copied and used. Start writing the prompt immediately. No introduction, no conclusion, no extra words.`;
 
 const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -40,11 +46,21 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
   const [systemPrompt, setSystemPrompt] = useState<string>(SYSTEM_PROMPT_DEFAULT);
   const { toast } = useToast();
   const responseRef = useRef<HTMLDivElement>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const eventSourceRef = useRef<{ close: () => void } | null>(null);
 
   // Load system prompt from storage when component mounts
   useEffect(() => {
     setSystemPrompt(getSystemPrompt());
+  }, []);
+
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+    };
   }, []);
 
   const handleGeneratePrompt = async () => {
@@ -73,120 +89,162 @@ const AIAssistant = ({ onUsePrompt }: AIAssistantProps) => {
       let userPrompt = '';
 
       if (promptType === "system") {
-        userPrompt = `Generate a SYSTEM PROMPT for: ${prompt}. This should define an AI's role, personality, and constraints without asking it to perform specific tasks.`;
+        userPrompt = `Create a system prompt: ${prompt}. Define the AI's role, personality, and constraints. and style. Output ONLY the prompt text with no greetings, explanations, offers to generate other content, or extra commentary.`;
       } else if (promptType === "task") {
-        userPrompt = `Generate a TASK PROMPT for: ${prompt}. This should provide specific instructions for an AI to complete a particular task.`;
+        userPrompt = `Create a task prompt: ${prompt}. Provide specific instructions for the AI. and style. Output ONLY the prompt text with no greetings, explanations, offers to generate other content, or extra commentary.`;
       } else if (promptType === "image") {
-        userPrompt = `Generate an IMAGE PROMPT for: ${prompt}. This should describe the desired visual elements, style, composition, colors, and subjects.`;
+        userPrompt = `Create an image prompt: ${prompt}. Describe visual elements, style, composition, colors, and subjects. and style. Output ONLY the prompt text with no greetings, explanations, offers to generate other content, or extra commentary.`;
       } else {
-        userPrompt = `Generate a VIDEO PROMPT for: ${prompt}. This should outline the content, scenes, transitions, and style guidelines.`;
+        userPrompt = `Create a video prompt: ${prompt}. Outline content, scenes, transitions, and style. Output ONLY the prompt text with no greetings, explanations, offers to generate other content, or extra commentary.`;
       }
 
-      const encodedPrompt = encodeURIComponent(userPrompt);
-      // Use the system prompt from state (which comes from storage) instead of the hardcoded one
-      const encodedSystemPrompt = encodeURIComponent(systemPrompt);
-      // Use stream=true for streaming, model=openai-large, and private=true
-      const url = `https://text.pollinations.ai/${encodedPrompt}?model=openai-large&private=true&stream=true&system=${encodedSystemPrompt}`;
+      // Try GET approach first since that worked in your test
+      const params = new URLSearchParams({
+        model: "openai",
+        system: systemPrompt,
+        prompt: userPrompt,
+        temperature: "0.4",
+        top_p: "0.8",
+        private: "true",
+        stream: "true"
+      });
 
-      // Create a new event source
-      const eventSource = new EventSource(url);
-      eventSourceRef.current = eventSource;
-      let fullText = '';
-      let hasReceivedContent = false;
+      const url = `https://text.pollinations.ai/${params.toString()}`;
+      console.log('Sending GET request to:', url.substring(0, 100) + '...');
 
-      eventSource.onmessage = (event) => {
+      // Use fetch with GET request and send referrer as header
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/event-stream',
+          'Referrer': 'promptzy',
+          'X-Referrer': 'promptzy'
+        }
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+      }
+
+      if (!response.body) {
+        throw new Error('No response body received');
+      }
+
+      // Check if response is streaming or plain text
+      const contentType = response.headers.get('content-type') || '';
+      console.log('Content-Type:', contentType);
+
+      if (contentType.includes('text/event-stream')) {
+        // Handle Server-Sent Events streaming
+        const reader = response.body!.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+        let hasReceivedContent = false;
+
+        // Store the reader in the ref for cleanup
+        eventSourceRef.current = { close: () => reader.cancel() } as any;
+
         try {
-          // Only add the actual content, not the JSON metadata
-          if (event.data.startsWith("{")) {
-            const parsedData = JSON.parse(event.data);
-            // Check for content in the delta if this is a streaming chunk
-            if (parsedData.choices && parsedData.choices[0] && parsedData.choices[0].delta) {
-              const content = parsedData.choices[0].delta.content;
-              if (content) {
-                fullText += content;
-                hasReceivedContent = true;
+          while (true) {
+            const { done, value } = await reader.read();
 
-                // Remove [DONE] marker from the text if present
-                fullText = fullText.replace(/\[DONE\]/g, "");
+            if (done) {
+              break;
+            }
 
-                setResponse({
-                  text: fullText,
-                  loading: true,
-                  error: null
-                });
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+              if (line.trim() === '') continue;
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6); // Remove 'data: ' prefix
+
+                if (data === '[DONE]') {
+                  // Stream is complete
+                  break;
+                }
+
+                try {
+                  const parsedData = JSON.parse(data);
+                  // Check for content in the delta if this is a streaming chunk
+                  if (parsedData.choices && parsedData.choices[0] && parsedData.choices[0].delta) {
+                    const content = parsedData.choices[0].delta.content;
+                    if (content) {
+                      fullText += content;
+                      hasReceivedContent = true;
+
+                      setResponse({
+                        text: fullText,
+                        loading: true,
+                        error: null
+                      });
+                    }
+                  }
+                } catch (parseError) {
+                  // If we can't parse as JSON, treat as plain text
+                  fullText += data;
+                  hasReceivedContent = true;
+                  setResponse({
+                    text: fullText,
+                    loading: true,
+                    error: null
+                  });
+                }
               }
             }
-          } else {
-            // If it's not JSON, it's probably just the content
-            fullText += event.data;
-            // Remove [DONE] marker from the text if present
-            fullText = fullText.replace(/\[DONE\]/g, "");
+          }
 
-            hasReceivedContent = true;
+          // Stream completed successfully
+          setResponse({
+            text: fullText,
+            loading: false,
+            error: null
+          });
+
+        } catch (streamError) {
+          // Handle streaming errors
+          if (!hasReceivedContent || !fullText.trim()) {
+            setResponse({
+              text: fullText || "",
+              loading: false,
+              error: streamError instanceof Error ? streamError.message : "Failed to generate content"
+            });
+
+            toast({
+              title: "Error",
+              description: "Failed to generate content. Please try again.",
+              variant: "destructive",
+            });
+          } else {
+            // We received content before the error, so treat it as a success
             setResponse({
               text: fullText,
-              loading: true,
+              loading: false,
               error: null
             });
           }
-        } catch (error) {
-          // If we can't parse as JSON, just add the raw data
-          fullText += event.data;
-          // Remove [DONE] marker from the text if present
-          fullText = fullText.replace(/\[DONE\]/g, "");
-
-          hasReceivedContent = true;
-          setResponse({
-            text: fullText,
-            loading: true,
-            error: null
-          });
+        } finally {
+          eventSourceRef.current = null;
         }
-      };
-
-      eventSource.onerror = (error) => {
-        eventSource.close();
-        eventSourceRef.current = null;
-
-        // Only show error if we haven't received any content
-        if (!hasReceivedContent || !fullText.trim()) {
-          setResponse({
-            text: fullText || "",
-            loading: false,
-            error: error instanceof Error ? error.message : "Failed to generate content"
-          });
-
-          toast({
-            title: "Error",
-            description: "Failed to generate content. Please try again.",
-            variant: "destructive",
-          });
-        } else {
-          // We received content before the error, so treat it as a success
-          // Final cleanup of any [DONE] markers
-          fullText = fullText.replace(/\[DONE\]/g, "");
-
-          setResponse({
-            text: fullText,
-            loading: false,
-            error: null
-          });
-        }
-      };
-
-      eventSource.addEventListener('done', () => {
-        eventSource.close();
-        eventSourceRef.current = null;
-
-        // Final cleanup of any [DONE] markers
-        fullText = fullText.replace(/\[DONE\]/g, "");
+      } else {
+        // Handle plain text response (non-streaming)
+        const text = await response.text();
+        console.log('Plain text response:', text);
 
         setResponse({
-          text: fullText,
+          text: text,
           loading: false,
           error: null
         });
-      });
+      }
+
+
     } catch (error) {
       setResponse({
         text: "",

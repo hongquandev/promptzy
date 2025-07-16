@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -86,6 +86,12 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
           <DialogTitle>
             {editingPrompt?.id ? "Edit Prompt" : "Add New Prompt"}
           </DialogTitle>
+          <DialogDescription>
+            {editingPrompt?.id
+              ? "Modify your existing prompt and update its tags and type."
+              : "Create a new prompt by entering the text, selecting a type, and adding relevant tags."
+            }
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-6 py-4">
           <div className="space-y-2">

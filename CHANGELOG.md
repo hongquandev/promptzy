@@ -5,6 +5,29 @@ All notable changes to Promptzy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2025-07-16
+
+### Added
+- **🤖 Enhanced AI Assistant:** Completely redesigned AI prompt generation with improved reliability
+- **📡 Header-Based API Authentication:** Referrer now sent as HTTP header instead of query parameter for better CORS compatibility
+- **♿ Accessibility Improvements:** Added proper DialogDescription components for screen reader support
+- **🔧 Client Connection Optimization:** Implemented intelligent Supabase client caching to reduce multiple instance warnings
+- **🎯 Aggressive Anti-Fluff System:** Strengthened AI system prompt to eliminate greetings, commentary, and conversational elements
+
+### Changed
+- **🔄 API Endpoint Migration:** Switched from EventSource to fetch-based streaming for better error handling
+- **📝 Prompt Generation Logic:** Updated to use GET requests with query parameters for improved stability
+- **🎨 Dialog UX:** Enhanced prompt form dialog with contextual descriptions for better user experience
+- **⚡ Performance Optimization:** Reduced Supabase client creation through intelligent caching mechanism
+- **🎯 System Prompt Refinement:** Completely rewrote AI system prompt with strict output rules and explicit "NO" list
+
+### Fixed
+- **🐛 Supabase URL Bug:** Fixed critical issue where prompts were being saved to hardcoded default URL instead of user's configured URL
+- **🔗 CORS Issues:** Resolved cross-origin request problems by moving referrer to HTTP headers
+- **⚠️ Console Warnings:** Eliminated "Multiple GoTrueClient instances" warnings through proper client management
+- **♿ Accessibility Warnings:** Fixed missing DialogDescription warnings for better screen reader support
+- **🤖 AI Response Quality:** Eliminated unwanted greetings, commentary, and conversational elements from AI-generated prompts
+
 ## [1.3.1]
 
 ### Added

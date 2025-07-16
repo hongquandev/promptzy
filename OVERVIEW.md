@@ -1,6 +1,6 @@
 # ✨ Promptzy 🎯
 
-**Last Updated:** 2025-05-29T03:05:39.954Z
+**Last Updated:** 2025-07-16T06:16:45.391Z
 
 ## Project Overview
 
@@ -13,11 +13,17 @@
 - **Tagging System:** Organize prompts with customizable tags and visual tag chips
 - **Search & Filter:** Full-text search and tag-based filtering with responsive masonry layout
 - **Manual Refresh:** Dedicated refresh button in header for syncing prompts after configuration changes
-- **AI Assistant:** Generate new prompt ideas using Pollinations.ai API with streaming responses and collapsible interface
+- **AI Assistant:** Enhanced prompt generation using Pollinations.ai API with:
+  - Fetch-based streaming for improved reliability
+  - Header-based authentication (referrer sent as HTTP header)
+  - Aggressive anti-fluff system prompt to eliminate greetings and commentary
+  - Support for system, task, image, and video prompt types
+  - Clean, direct output with no conversational elements
 - **Cloud Storage:**
   - Supabase-only storage for reliable cloud persistence
   - UUID validation and user management
-  - Eliminated localStorage and sync functionality to prevent issues
+  - Intelligent client caching to reduce multiple instance warnings
+  - Fixed critical bug where prompts saved to hardcoded URL instead of user's configured URL
   - Row Level Security (RLS) policies for data protection
 - **Advanced UI/UX:**
   - Responsive masonry layout (1-3 columns based on screen size)
@@ -25,6 +31,8 @@
   - Delete confirmation dialogs with "don't show again" option
   - Empty state handling for filtered and unfiltered views
   - Mobile-optimized responsive design with proper touch targets
+  - Enhanced accessibility with proper DialogDescription components
+  - Improved dialog UX with contextual descriptions
 - **Progressive Web App (PWA):**
   - Installable as mobile app directly from browser
   - Service worker for offline functionality and caching
@@ -150,7 +158,7 @@ For detailed deployment instructions, see the [DEPLOYMENT.md](DEPLOYMENT.md) gui
 - **Authentication:** User prefers login-based authentication system with multiple options (Google, GitHub, email/password) over anonymous user IDs
 - **✅ Cloud Operations:** All CRUD operations now properly update Supabase database with proper error handling
 - **✅ Rebranded to Promptzy:** Updated from "AI Prompt Dashboard" to "Promptzy" with cute new branding and logo
-- **✅ Version Updated:** Current version 1.3.0+ with PWA functionality, mobile optimization, and refresh functionality
+- **✅ Version Updated:** Current version 1.3.3 with PWA functionality, mobile optimization, and refresh functionality
 
 ## 🔮 Future Enhancements
 
