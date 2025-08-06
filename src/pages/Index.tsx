@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 const Index = () => {
   // Create a fresh Supabase client to handle authentication (memoized to prevent recreation)
@@ -42,6 +43,7 @@ const Index = () => {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [suppressDeleteConfirm, setSuppressDeleteConfirm] = useState<boolean>(false);
+  const [deletePassword, setDeletePassword] = useState("");
 
   // Responsive Masonry: calculate number of columns based on breakpoints
   const [colCount, setColCount] = useState<number>(() => {
@@ -292,14 +294,25 @@ const Index = () => {
     }
   };
   const confirmDelete = () => {
+    if (deletePassword !== "ninzaco") {
+      toast({
+        title: "Invalid Password",
+        description: "Please enter the correct password to delete",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (pendingDeleteId) {
       handleDeletePrompt(pendingDeleteId);
     }
     setPendingDeleteId(null);
+    setDeletePassword("");
     setIsDeleteConfirmOpen(false);
   };
   const cancelDelete = () => {
     setPendingDeleteId(null);
+    setDeletePassword("");
     setIsDeleteConfirmOpen(false);
   };
   const toggleSuppressDeleteConfirm = (checked: boolean) => {
@@ -407,15 +420,23 @@ const Index = () => {
             <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogDescription>
-            Are you sure you want to delete this prompt?
+            Please enter the password to confirm deletion
           </AlertDialogDescription>
-          <div className="flex items-center space-x-2 mt-4">
-            <Checkbox
-              id="suppress-delete-confirm"
-              checked={suppressDeleteConfirm}
-              onCheckedChange={(val) => toggleSuppressDeleteConfirm(!!val)}
+          <div className="space-y-4">
+            <Input
+              type="password"
+              placeholder="Enter password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
             />
-            <Label htmlFor="suppress-delete-confirm">Don't show this again</Label>
+            {/* <div className="flex items-center space-x-2">
+              <Checkbox
+                id="suppress-delete-confirm"
+                checked={suppressDeleteConfirm}
+                onCheckedChange={(val) => toggleSuppressDeleteConfirm(!!val)}
+              />
+              <Label htmlFor="suppress-delete-confirm">Don't show this again</Label>
+            </div> */}
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
