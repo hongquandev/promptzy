@@ -17,7 +17,7 @@ const Header: React.FC<HeaderProps> = ({ onAddPrompt, onRefreshPrompts, isRefres
     <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4 sm:gap-0">
       <div className="flex items-center gap-2">
         <AnimatedLogo />
-        <h1 className="text-2xl sm:text-3xl font-bold">Promptzy</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Promptzy Ninzaco</h1>
       </div>
       <div className="flex gap-2 w-full sm:w-auto">
         <Button

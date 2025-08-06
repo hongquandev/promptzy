@@ -5,6 +5,7 @@ export interface Tag {
 
 export interface Prompt {
   id: string;
+  title?: string; // Optional title field
   text: string;
   tags: Tag[];
   createdAt: string;

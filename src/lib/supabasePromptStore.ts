@@ -227,6 +227,7 @@ export const getPromptsFromSupabase = async (): Promise<Prompt[]> => {
     // Transform data to match our Prompt type
     return data.map((item: PromptsTable) => ({
       id: item.id || '',
+      title: item.title || '', // New field for title
       text: item.content || '', // Map content to text
       tags: Array.isArray(item.tags) ? item.tags.map((tagName: string) => ({
         id: tagName, // Using the tag name as the ID
@@ -269,7 +270,7 @@ export const savePromptToSupabase = async (prompt: Prompt): Promise<boolean> => 
       content: prompt.text, // Map text to content
       tags: prompt.tags.map(tag => tag.name), // Convert Tag objects to string names
       createdat: prompt.createdAt,
-      title: prompt.text.substring(0, 50), // Use first 50 chars of text as title
+      title: prompt.title ?? prompt.text.substring(0, 50), // Use first 50 chars of text as title
       category: prompt.type || 'task',
       description: '',
       user_id: userId,

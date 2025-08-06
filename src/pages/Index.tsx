@@ -195,6 +195,7 @@ const Index = () => {
     // Ensure promptData has all required fields
     const completePromptData: Prompt = {
       id: promptData.id || crypto.randomUUID(),
+      title: promptData.title || "",
       text: promptData.text,
       tags: promptData.tags || [],
       type: promptData.type || "task",

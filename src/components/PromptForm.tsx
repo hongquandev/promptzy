@@ -17,6 +17,7 @@ interface PromptFormProps {
 
 const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps) => {
   const [text, setText] = useState("");
+  const [title, setTitle] = useState("");
   const [tags, setTags] = useState<Tag[]>([]);
   const [type, setType] = useState<"system" | "task" | "image" | "video">("task");
   const { toast } = useToast();
@@ -24,12 +25,12 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
   useEffect(() => {
     if (editingPrompt) {
       setText(editingPrompt.text);
-      // Only copy tags if the prompt has an id (meaning it's not a new AI-generated prompt)
+      setTitle(editingPrompt.title || "");
       setTags(editingPrompt.tags ? [...editingPrompt.tags] : []);
-      // Set type if it exists, otherwise default to task
       setType(editingPrompt.type || "task");
     } else {
       setText("");
+      setTitle("");
       setTags([]);
       setType("task");
     }
@@ -47,10 +48,10 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
   };
 
   const handleSubmit = () => {
-    if (!text.trim()) {
+    if (!text.trim() || !title.trim()) {
       toast({
         title: "Error",
-        description: "Prompt text cannot be empty",
+        description: "Prompt title and text cannot be empty",
         variant: "destructive",
       });
       return;
@@ -60,6 +61,7 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
     const promptData: Prompt = {
       // Generate a UUID for new prompts to satisfy Supabase UUID requirements
       id: editingPrompt?.id && editingPrompt.id !== "" ? editingPrompt.id : crypto.randomUUID(),
+      title: title.trim(),
       text: text.trim(),
       tags: tags || [], // Ensure tags is an array (even if empty)
       type: type,
@@ -120,6 +122,17 @@ const PromptForm = ({ isOpen, onClose, onSave, editingPrompt }: PromptFormProps)
             </RadioGroup>
           </div>
           
+          <div className="space-y-2">
+            <Label htmlFor="title">Title</Label>
+            <Textarea
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter a title for your prompt..."
+              className="min-h-[50px] bg-secondary/50 border-secondary"
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="prompt">Prompt Text</Label>
             <Textarea
