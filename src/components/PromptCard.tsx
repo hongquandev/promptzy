@@ -30,6 +30,7 @@ export default function PromptCard({ prompt, onEdit, onDelete }: PromptCardProps
     onDelete(prompt.id);
   };
 
+  console.log("Rendering PromptCard for:", prompt);
   // Get the first line for preview
   const firstLine = prompt.title ?? prompt.text.split('\n')[0];
   const previewText = firstLine.length > 320 ? firstLine.substring(0, 320) + "..." : firstLine;
@@ -68,7 +69,7 @@ export default function PromptCard({ prompt, onEdit, onDelete }: PromptCardProps
             <div className="text-muted-foreground text-xs">
               {formatDistanceToNow(new Date(prompt.createdAt), { addSuffix: true })}
             </div>
-            <div className="font-medium mt-1 line-clamp-1">
+            <div className="font-medium mt-1">
               {previewText}
             </div>
           </div>

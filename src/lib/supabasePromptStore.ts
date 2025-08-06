@@ -210,7 +210,9 @@ export const getPromptsFromSupabase = async (): Promise<Prompt[]> => {
     const { data, error } = await client
       .from('prompts')
       .select('*')
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .order('createdat', { ascending: false })
+      ;
 
     if (error) {
       console.error("Error fetching prompts from Supabase:", error);
