@@ -32,7 +32,7 @@ export default function PromptCard({ prompt, onEdit, onDelete }: PromptCardProps
 
   // Get the first line for preview
   const firstLine = prompt.title ?? prompt.text.split('\n')[0];
-  const previewText = firstLine.length > 80 ? firstLine.substring(0, 80) + "..." : firstLine;
+  const previewText = firstLine.length > 320 ? firstLine.substring(0, 320) + "..." : firstLine;
 
   // Determine the prompt type display badge color
   const typeColor = promptType === "system"
